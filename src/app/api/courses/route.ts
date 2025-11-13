@@ -37,6 +37,9 @@ export async function GET(request: NextRequest) {
       case 'createdAt':
         order.createdAt = 'desc';
         break;
+      case 'popularity':
+        order.popularity = 'desc';
+        break;
       default:
         order.createdAt = 'desc';
     }
