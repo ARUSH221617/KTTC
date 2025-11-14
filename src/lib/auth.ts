@@ -1,32 +1,58 @@
-import { db } from "./db";
 
-// For now, using a simple admin check. In a real application,
-// you would use a proper authentication system like NextAuth.js
-export async function checkAdminCredentials(email: string, password: string) {
-  // In a real application, you'd hash the password and verify against a database
-  // For this implementation, we'll use hardcoded admin credentials
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "arush221617@gmail.com";
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "amir1386"; // In real app, this should be hashed
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { db } from './db';
+import { User } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-    return {
-      id: "admin",
-      email: ADMIN_EMAIL,
-      name: "Admin User",
-    };
-  }
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth({
+  adapter: PrismaAdapter(db),
+  providers: [
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials.password) {
+          return null;
+        }
 
-  return null;
-}
+        const user = await db.user.findUnique({
+          where: { email: credentials.email as string },
+        });
 
-// Set admin session token
-export function setAdminSession() {
-  // This function should be called from a server action or API route
-  // Implementation moved to the API route
-}
+        if (user && bcrypt.compareSync(credentials.password as string, user.password)) {
+          return user;
+        }
 
-// Clear admin session
-export function clearAdminSession() {
-  // This function should be called from a server action or API route
-  // Implementation moved to the API route
-}
+        return null;
+      },
+    }),
+  ],
+  session: {
+    strategy: 'jwt',
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
+});

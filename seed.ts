@@ -1,7 +1,20 @@
+
 import { db } from './src/lib/db';
+import bcrypt from 'bcryptjs';
 
 async function main() {
   console.log('Start seeding...');
+
+  // Create sample user
+  const hashedPassword = await bcrypt.hash('amir1386', 10);
+  const user = await db.user.create({
+    data: {
+      email: 'arush221617@gmail.com',
+      password: hashedPassword,
+    },
+  });
+
+  console.log('Created user:', user);
 
   // Create sample courses
   const courses = await Promise.all([
