@@ -1,22 +1,18 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client-js"
-}
 
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
+generator client {
+  provider = "prisma-client-js"
+}
+
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
   name      String?
+  email     String   @unique
+  password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -26,13 +22,14 @@ model Course {
   title       String
   description String
   category    String
-  level       String   // Beginner, Intermediate, Advanced
-  duration    String   // e.g., "2 weeks", "3 months"
+  level       String
+  duration    String
   instructor  String
-  thumbnail   String?
+  thumbnail   String
   popularity  Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
   certificates Certificate[]
 }
 
@@ -45,17 +42,8 @@ model Certificate {
   isValid       Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  course        Course   @relation(fields: [courseId], references: [id])
-}
 
-model Contact {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  subject   String
-  message   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  course Course @relation(fields: [courseId], references: [id])
 }
 
 model Testimonial {
@@ -63,7 +51,16 @@ model Testimonial {
   name      String
   role      String
   content   String
-  avatar    String?
+  avatar    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
