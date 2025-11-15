@@ -3,12 +3,12 @@ import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, subject, message } = await request.json();
+    const { name, email, message } = await request.json();
 
     // Validate required fields
-    if (!name || !email || !subject || !message) {
+    if (!name || !email || !message) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Name, email, and message are required' },
         { status: 400 }
       );
     }
@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
-        subject,
         message,
       },
     });

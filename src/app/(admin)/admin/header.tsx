@@ -16,7 +16,7 @@ export default function AdminHeader() {
       });
 
       if (response.ok) {
-        router.push('/admin/login');
+        router.push('/login');
         router.refresh();
       }
     } catch (error) {

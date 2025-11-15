@@ -1,6 +1,6 @@
 // src/app/api/admin/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { checkAdminCredentials } from '@/lib/auth';
+import { checkAdminCredentials, createAdminSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Check credentials
     const user = await checkAdminCredentials(email, password);
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
@@ -27,15 +27,20 @@ export async function POST(request: NextRequest) {
     // Create response with success message
     const response = NextResponse.json({
       success: true,
-      message: 'Login successful'
+      message: 'Login successful',
+      user: { id: user.id, email: user.email } // Don't return sensitive info like password
     });
 
-    // Set admin session token as cookie
-    response.cookies.set('admin_token', process.env.ADMIN_PASSWORD || "admin123", {
+    // Create a secure admin session
+    const sessionToken = createAdminSession(user.id, user.email);
+
+    // Store the session token in a secure cookie
+    response.cookies.set('admin_token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24, // 24 hours
       path: '/',
+      sameSite: 'strict', // Prevent CSRF
     });
 
     return response;
