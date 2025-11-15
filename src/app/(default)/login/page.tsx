@@ -11,24 +11,70 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useFormStatus } from 'react-dom';
-import { authenticate } from './actions';
-import { useActionState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [result, dispatch] = useActionState(authenticate, undefined);
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // Only show error toast if there's an error and it's not the redirect error
-    if (result?.error) {
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(event.target as HTMLFormElement);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    // Basic validation
+    if (!email || !password) {
       toast({
         title: "Login Failed",
-        description: result.error,
+        description: "Email and password are required.",
         variant: "destructive",
       });
+      setIsLoading(false);
+      return;
     }
-  }, [result]);
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Login successful - redirect to admin dashboard
+        toast({
+          title: "Login Successful",
+          description: "Redirecting to dashboard...",
+        });
+        router.push('/admin');
+      } else {
+        // Login failed
+        toast({
+          title: "Login Failed",
+          description: data.error || "Invalid credentials. Please check your email and password.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -40,7 +86,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={dispatch} className="space-y-4" id="login-form">
+          <form onSubmit={handleSubmit} className="space-y-4" id="login-form">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -65,7 +111,9 @@ export default function LoginPage() {
               />
               <span id="password-error" className="text-xs text-red-500 hidden"></span>
             </div>
-            <LoginButton />
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Login'}
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -116,30 +164,3 @@ function showError(field: string, message: string) {
   inputElement.classList.add('border-red-500');
 }
 
-function LoginButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      className="w-full"
-      aria-disabled={pending}
-      form="login-form"
-      onClick={(e) => {
-        const email = (document.getElementById('email') as HTMLInputElement).value;
-        const password = (document.getElementById('password') as HTMLInputElement).value;
-
-        // Validate both fields before submission
-        const isEmailValid = validateField('email', email);
-        const isPasswordValid = validateField('password', password);
-
-        if (!isEmailValid || !isPasswordValid) {
-          e.preventDefault();
-          return false;
-        }
-      }}
-    >
-      {pending ? 'Logging in...' : 'Login'}
-    </Button>
-  );
-}

@@ -1,8 +1,8 @@
-
 'use server';
 
-import { signIn } from '@/lib/auth';
-import { AuthError } from 'next-auth';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { checkAdminCredentials, createAdminSession } from '@/lib/auth';
 
 // Extend the return type to provide detailed information
 type Result = {
@@ -40,44 +40,35 @@ export async function authenticate(prevState: Result | undefined, formData: Form
       };
     }
 
-    // Attempt to sign in
-    await signIn('credentials', {
-      email,
-      password,
-      redirectTo: '/admin', // Redirect to admin dashboard after successful login
+    // Check credentials using the existing function
+    const user = await checkAdminCredentials(email, password);
+
+    if (!user) {
+      return {
+        error: 'Invalid credentials. Please check your email and password.'
+      };
+    }
+
+    // Create admin session - NOTE: createAdminSession is now async
+    const sessionToken = await createAdminSession(user.id, user.email);
+
+    // Set the session cookie
+    (await
+      // Set the session cookie
+      cookies()).set('admin_token', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: '/',
+      sameSite: 'strict', // Prevent CSRF
     });
 
+    // Return success result
     return {
       success: true,
       error: undefined
     };
   } catch (error) {
-    // Handle NextAuth errors with more specific error messages
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return {
-            error: 'Invalid credentials. Please check your email and password.'
-          };
-        case 'AccessDenied':
-          return {
-            error: 'Access denied. Your account may be deactivated.'
-          };
-        case 'Verification':
-          return {
-            error: 'Verification error. Please try again.'
-          };
-        case 'OAuthAccountNotLinked':
-          return {
-            error: 'Account not linked. Please try another sign in method.'
-          };
-        default:
-          return {
-            error: 'An unexpected authentication error occurred. Please try again.'
-          };
-      }
-    }
-
     // Handle generic errors with more detailed messages
     console.error('Authentication error:', error);
 
@@ -98,4 +89,15 @@ export async function authenticate(prevState: Result | undefined, formData: Form
       error: 'An unexpected error occurred during authentication. Please try again later.'
     };
   }
+}
+
+// Separate function to handle the redirect after successful login
+export async function loginAndRedirect(formData: FormData) {
+  const result = await authenticate(undefined, formData);
+
+  if (result.success) {
+    redirect('/admin');
+  }
+
+  return result;
 }

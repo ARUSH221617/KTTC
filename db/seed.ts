@@ -1,5 +1,5 @@
-
-import { db } from './src/lib/db';
+import "dotenv/config";
+import { db } from '../src/lib/db';
 import bcrypt from 'bcryptjs';
 
 async function main() {

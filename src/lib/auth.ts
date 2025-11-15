@@ -5,59 +5,60 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { db } from './db';
 import bcrypt from 'bcryptjs';
+import { SignJWT, jwtVerify } from 'jose';
 
-// In-memory session store (in production, use a database or Redis)
-const adminSessions = new Map<string, { userId: string; email: string; createdAt: Date }>();
+// Secret key for JWT (in production, use a strong secret from environment variables)
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'fallback_jwt_secret_for_development'
+);
 
-// Function to create an admin session and return a session token
-export function createAdminSession(userId: string, email: string): string {
-  // Generate a secure random session token
-  const sessionToken = randomBytes(32).toString('hex');
+// Function to create an admin session token using JWT
+export async function createAdminSession(userId: string, email: string): Promise<string> {
+  const token = await new SignJWT({ userId, email })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('24h')
+    .sign(JWT_SECRET);
 
-  // Store session data
-  adminSessions.set(sessionToken, {
-    userId,
-    email,
-    createdAt: new Date(),
-  });
-
-  return sessionToken;
+  return token;
 }
 
 // Function to validate an admin session token
-export function validateAdminSession(token: string): boolean {
-  return adminSessions.has(token);
+export async function validateAdminSession(token: string): Promise<boolean> {
+  try {
+    await jwtVerify(token, JWT_SECRET);
+    return true;
+  } catch (error) {
+    console.error('Session validation error:', error);
+    return false;
+  }
 }
 
 // Function to get admin session data
-export function getAdminSessionData(token: string) {
-  return adminSessions.get(token);
+export async function getAdminSessionData(token: string) {
+  try {
+    const verified = await jwtVerify(token, JWT_SECRET);
+    return verified.payload as { userId: string; email: string };
+  } catch (error) {
+    console.error('Error getting session data:', error);
+    return null;
+  }
 }
 
-// Function to clear an admin session
-export function clearAdminSession(token: string): boolean {
-  return adminSessions.delete(token);
+// Function to clear an admin session (not needed for JWT)
+export function clearAdminSession(): boolean {
+  // For JWT, we don't actually clear anything server-side
+  // The client needs to remove the cookie
+  return true;
 }
 
 // Function to check admin credentials
 export async function checkAdminCredentials(email: string, password: string) {
-  // In a real application, you might want to check against a specific admin user
-  // For now, we'll check against environment variables or default values
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-
-  if (email === adminEmail && password === adminPassword) {
-    return { id: "admin", email: adminEmail }; // Return a basic admin user object
-  }
-
-  // Also check if this is a user with admin role in the database
   const user = await db.user.findUnique({
     where: { email },
   });
 
   if (user && bcrypt.compareSync(password, user.password)) {
-    // Since role field doesn't exist in the current schema, we only check the default admin credentials
-    // In a real application, you would add role field to the User schema
     return user;
   }
 

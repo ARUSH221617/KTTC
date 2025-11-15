@@ -14,7 +14,7 @@ export default async function AdminLayout({
 
   let isAuthenticated = false;
   if (token?.value) {
-    isAuthenticated = validateAdminSession(token.value);
+    isAuthenticated = await validateAdminSession(token.value);
   }
 
   if (!isAuthenticated) {

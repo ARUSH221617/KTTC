@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/auth";
 
 // Function to check if admin is authenticated based on cookie
 function isAdminAuthenticated(request: NextRequest): boolean {
@@ -7,7 +6,30 @@ function isAdminAuthenticated(request: NextRequest): boolean {
   if (!token?.value) {
     return false;
   }
-  return validateAdminSession(token.value);
+
+  try {
+    // Decode JWT payload to check expiration (simplified approach for middleware)
+    const parts = token.value.split('.');
+    if (parts.length !== 3) {
+      return false;
+    }
+
+    const payload = parts[1];
+    const decodedPayload = JSON.parse(Buffer.from(payload, 'base64url').toString());
+
+    // Check if token is expired
+    const now = Math.floor(Date.now() / 1000);
+    if (decodedPayload.exp && decodedPayload.exp < now) {
+      return false;
+    }
+
+    // For middleware purposes, we only check expiration, not signature
+    // The signature verification happens in the page components
+    return true;
+  } catch (error) {
+    console.error('JWT validation error in middleware:', error);
+    return false;
+  }
 }
 
 export default function middleware(request: NextRequest) {

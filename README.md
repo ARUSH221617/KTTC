@@ -72,12 +72,24 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000) to see your application running.
 
+## 🔐 Default Login Credentials
+
+When you first run the application, you can login with one of these sets of credentials:
+
+1. **Default Admin**:
+   - Email: `admin@example.com`
+   - Password: `admin123`
+
+2. **Seeded User**:
+   - Email: `arush221617@gmail.com`
+   - Password: `amir1386`
+
 ## 🤖 Powered by Z.ai
 
 This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
 
 - **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
+- **🎨 UI Development** - Create beautiful interfaces with AI assistance
 - **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
 - **📝 Documentation** - Auto-generate comprehensive documentation
 - **🚀 Optimization** - Performance improvements and best practices

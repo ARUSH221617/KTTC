@@ -1,4 +1,4 @@
-// src/app/api/admin/login/route.ts
+// src/app/api/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAdminCredentials, createAdminSession } from '@/lib/auth';
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create a secure admin session
-    const sessionToken = createAdminSession(user.id, user.email);
+    const sessionToken = await createAdminSession(user.id, user.email);
 
     // Store the session token in a secure cookie
     response.cookies.set('admin_token', sessionToken, {
