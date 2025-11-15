@@ -20,18 +20,12 @@ export default function LoginPage() {
   const [result, dispatch] = useActionState(authenticate, undefined);
 
   useEffect(() => {
+    // Only show error toast if there's an error and it's not the redirect error
     if (result?.error) {
       toast({
         title: "Login Failed",
         description: result.error,
         variant: "destructive",
-      });
-    }
-
-    if (result?.success) {
-      toast({
-        title: "Login Successful",
-        description: "Welcome back!",
       });
     }
   }, [result]);
