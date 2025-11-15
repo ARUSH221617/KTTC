@@ -25,6 +25,21 @@ export async function authenticate(prevState: Result | undefined, formData: Form
       };
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return {
+        error: 'Please enter a valid email address.'
+      };
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      return {
+        error: 'Password must be at least 6 characters long.'
+      };
+    }
+
     // Attempt to sign in
     await signIn('credentials', {
       email,
@@ -37,24 +52,50 @@ export async function authenticate(prevState: Result | undefined, formData: Form
       error: undefined
     };
   } catch (error) {
-    // Handle NextAuth errors
+    // Handle NextAuth errors with more specific error messages
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
           return {
-            error: 'Invalid email or password. Please try again.'
+            error: 'Invalid credentials. Please check your email and password.'
+          };
+        case 'AccessDenied':
+          return {
+            error: 'Access denied. Your account may be deactivated.'
+          };
+        case 'Verification':
+          return {
+            error: 'Verification error. Please try again.'
+          };
+        case 'OAuthAccountNotLinked':
+          return {
+            error: 'Account not linked. Please try another sign in method.'
           };
         default:
           return {
-            error: 'Something went wrong. Please try again later.'
+            error: 'An unexpected authentication error occurred. Please try again.'
           };
       }
     }
 
-    // Handle generic errors
+    // Handle generic errors with more detailed messages
     console.error('Authentication error:', error);
+
+    // Check for network errors or other specific error types
+    if (error instanceof Error) {
+      if (error.message.includes('fetch')) {
+        return {
+          error: 'Network error. Please check your connection and try again.'
+        };
+      } else if (error.message.includes('timeout')) {
+        return {
+          error: 'Request timed out. Please try again.'
+        };
+      }
+    }
+
     return {
-      error: 'An unexpected error occurred. Please try again later.'
+      error: 'An unexpected error occurred during authentication. Please try again later.'
     };
   }
 }
