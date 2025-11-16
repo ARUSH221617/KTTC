@@ -3,6 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
+/**
+ * Renders the admin header component.
+ *
+ * @returns {JSX.Element} The rendered admin header.
+ */
 export default function AdminHeader() {
   const router = useRouter();
 

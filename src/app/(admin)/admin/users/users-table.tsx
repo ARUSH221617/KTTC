@@ -5,7 +5,11 @@ import { User } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
 
-// Define the columns for the users table
+/**
+ * The columns for the users table.
+ *
+ * @type {ColumnDef<User>[]}
+ */
 export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "name",
@@ -24,10 +28,24 @@ export const columns: ColumnDef<User>[] = [
   },
 ];
 
-export default function UsersTable({ 
-  initialData 
-}: { 
-  initialData: User[] 
+/**
+ * Renders a table of users.
+ *
+ * @param { { initialData: User[] } } props - The component props.
+ * @param {User[]} props.initialData - The initial data for the table.
+ * @returns {JSX.Element} The rendered users table.
+ */
+export default function UsersTable({
+  initialData,
+}: {
+  initialData: User[];
 }) {
-  return <DataTable columns={columns} data={initialData} searchKey="name" searchPlaceholder="Search users..." />;
+  return (
+    <DataTable
+      columns={columns}
+      data={initialData}
+      searchKey="name"
+      searchPlaceholder="Search users..."
+    />
+  );
 }

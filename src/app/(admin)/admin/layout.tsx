@@ -2,6 +2,13 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import AdminHeader from "./header";
 
+/**
+ * Admin layout component that checks for authentication and renders the admin header.
+ *
+ * @param { { children: React.ReactNode } } props - The component props.
+ * @param {React.ReactNode} props.children - The child components to render.
+ * @returns {Promise<JSX.Element>} The rendered admin layout.
+ */
 export default async function AdminLayout({
   children,
 }: {

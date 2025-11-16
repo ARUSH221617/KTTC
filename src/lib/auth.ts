@@ -6,6 +6,10 @@ import { db } from './db';
 import { User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
+/**
+ * @file This file contains the NextAuth.js configuration.
+ * @see {@link https://next-auth.js.org/configuration/options}
+ */
 export const {
   handlers: { GET, POST },
   auth,

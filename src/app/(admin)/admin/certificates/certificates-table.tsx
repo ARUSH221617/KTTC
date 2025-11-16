@@ -6,7 +6,11 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
 
-// Define the columns for the certificates table
+/**
+ * The columns for the certificates table.
+ *
+ * @type {ColumnDef<Certificate>[]}
+ */
 export const columns: ColumnDef<Certificate>[] = [
   {
     accessorKey: "certificateNo",
@@ -52,10 +56,24 @@ export const columns: ColumnDef<Certificate>[] = [
   },
 ];
 
-export default function CertificatesTable({ 
-  initialData 
-}: { 
-  initialData: Certificate[] 
+/**
+ * Renders a table of certificates.
+ *
+ * @param { { initialData: Certificate[] } } props - The component props.
+ * @param {Certificate[]} props.initialData - The initial data for the table.
+ * @returns {JSX.Element} The rendered certificates table.
+ */
+export default function CertificatesTable({
+  initialData,
+}: {
+  initialData: Certificate[];
 }) {
-  return <DataTable columns={columns} data={initialData} searchKey="holderName" searchPlaceholder="Search certificates..." />;
+  return (
+    <DataTable
+      columns={columns}
+      data={initialData}
+      searchKey="holderName"
+      searchPlaceholder="Search certificates..."
+    />
+  );
 }

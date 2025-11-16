@@ -8,6 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Search, CheckCircle, XCircle, Award, Calendar, User, BookOpen, AlertCircle, Download, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * Renders the certificate verification page.
+ *
+ * @returns {JSX.Element} The rendered certificate verification page.
+ */
 export default function CertificatePage() {
   const [certificateNumber, setCertificateNumber] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);

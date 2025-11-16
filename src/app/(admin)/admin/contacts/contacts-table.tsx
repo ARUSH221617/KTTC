@@ -5,7 +5,11 @@ import { Contact } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
 
-// Define the columns for the contacts table
+/**
+ * The columns for the contacts table.
+ *
+ * @type {ColumnDef<Contact>[]}
+ */
 export const columns: ColumnDef<Contact>[] = [
   {
     accessorKey: "name",
@@ -28,10 +32,24 @@ export const columns: ColumnDef<Contact>[] = [
   },
 ];
 
-export default function ContactsTable({ 
-  initialData 
-}: { 
-  initialData: Contact[] 
+/**
+ * Renders a table of contacts.
+ *
+ * @param { { initialData: Contact[] } } props - The component props.
+ * @param {Contact[]} props.initialData - The initial data for the table.
+ * @returns {JSX.Element} The rendered contacts table.
+ */
+export default function ContactsTable({
+  initialData,
+}: {
+  initialData: Contact[];
 }) {
-  return <DataTable columns={columns} data={initialData} searchKey="name" searchPlaceholder="Search contacts..." />;
+  return (
+    <DataTable
+      columns={columns}
+      data={initialData}
+      searchKey="name"
+      searchPlaceholder="Search contacts..."
+    />
+  );
 }

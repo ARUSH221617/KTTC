@@ -70,6 +70,11 @@ const teamMembers = [
   }
 ];
 
+/**
+ * Renders the about page.
+ *
+ * @returns {JSX.Element} The rendered about page.
+ */
 export default function AboutPage() {
   const [isLoaded, setIsLoaded] = useState(false);
 

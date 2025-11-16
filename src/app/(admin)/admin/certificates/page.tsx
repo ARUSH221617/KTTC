@@ -2,9 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCertificates } from "@/lib/data-fetching";
 import CertificatesTable from "./certificates-table";
 
+/**
+ * Renders the admin certificates page.
+ *
+ * @returns {Promise<JSX.Element>} The rendered admin certificates page.
+ */
 export default async function AdminCertificatesPage() {
   const certificates = await getCertificates();
-  
+
   return (
     <div className="p-6">
       <Card>

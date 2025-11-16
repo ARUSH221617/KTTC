@@ -11,6 +11,11 @@ const categories = ["All", "Teaching Skills", "Psychology", "Management", "Techn
 const levels = ["All", "Beginner", "Intermediate", "Advanced"];
 const durations = ["All", "Short (1-4 weeks)", "Medium (5-8 weeks)", "Long (9+ weeks)"];
 
+/**
+ * Renders the courses page.
+ *
+ * @returns {JSX.Element} The rendered courses page.
+ */
 export default function CoursesPage() {
   const [courses, setCourses] = useState<any[]>([]);
   const [allCourses, setAllCourses] = useState<any[]>([]);

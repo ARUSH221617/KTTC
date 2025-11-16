@@ -14,6 +14,11 @@ import { Label } from '@/components/ui/label';
 import { useFormState, useFormStatus } from 'react-dom';
 import { authenticate } from './actions';
 
+/**
+ * Renders the login page.
+ *
+ * @returns {JSX.Element} The rendered login page.
+ */
 export default function LoginPage() {
   const [errorMessage, dispatch] = useFormState(authenticate, undefined);
 
@@ -53,6 +58,11 @@ export default function LoginPage() {
   );
 }
 
+/**
+ * Renders the login button.
+ *
+ * @returns {JSX.Element} The rendered login button.
+ */
 function LoginButton() {
   const { pending } = useFormStatus();
 

@@ -45,6 +45,13 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Root layout for the default section.
+ *
+ * @param {Readonly<{children: React.ReactNode;}>} props - The component props.
+ * @param {React.ReactNode} props.children - The child components to render.
+ * @returns {JSX.Element} The rendered root layout.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+/**
+ * Handles POST requests to the /api/contact endpoint.
+ *
+ * @param {NextRequest} request - The incoming request.
+ * @returns {Promise<NextResponse>} The response.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { name, email, subject, message } = await request.json();
@@ -50,6 +56,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Handles GET requests to the /api/contact endpoint.
+ *
+ * @returns {Promise<NextResponse>} The response.
+ */
 export async function GET() {
   try {
     const contacts = await db.contact.findMany({

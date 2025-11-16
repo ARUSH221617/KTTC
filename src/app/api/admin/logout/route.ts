@@ -2,6 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clearAdminSession } from '@/lib/auth';
 
+/**
+ * Handles admin logout.
+ *
+ * @param {NextRequest} request - The incoming request.
+ * @returns {Promise<NextResponse>} The response.
+ */
 export async function POST(request: NextRequest) {
   try {
     // Create response

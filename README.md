@@ -1,6 +1,6 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# 🚀 Khuzestan Teacher Training Center (KTTC)
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+This is the official online platform for the Khuzestan Teacher Training Center (KTTC). This web application is designed to empower educators with modern teaching skills and professional development programs.
 
 ## ✨ Technology Stack
 
@@ -60,6 +60,9 @@ This scaffold provides a robust foundation built with:
 # Install dependencies
 npm install
 
+# Run with Docker
+docker-compose up -d
+
 # Start development server
 npm run dev
 
@@ -92,7 +95,8 @@ src/
 ├── components/          # Reusable React components
 │   └── ui/             # shadcn/ui components
 ├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
+├── lib/                # Utility functions and configurations
+└── types/              # TypeScript type definitions
 ```
 
 ## 🎨 Available Features & Components

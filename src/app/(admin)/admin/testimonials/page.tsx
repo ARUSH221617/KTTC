@@ -2,9 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTestimonials } from "@/lib/data-fetching";
 import TestimonialsTable from "./testimonials-table";
 
+/**
+ * Renders the admin testimonials page.
+ *
+ * @returns {Promise<JSX.Element>} The rendered admin testimonials page.
+ */
 export default async function AdminTestimonialsPage() {
   const testimonials = await getTestimonials();
-  
+
   return (
     <div className="p-6">
       <Card>

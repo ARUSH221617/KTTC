@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { GraduationCap, Mail, Phone, MapPin, Facebook, Twitter, Instagram, MessageCircle } from "lucide-react";
 
+/**
+ * Renders the footer component.
+ *
+ * @returns {JSX.Element} The rendered footer component.
+ */
 const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white">

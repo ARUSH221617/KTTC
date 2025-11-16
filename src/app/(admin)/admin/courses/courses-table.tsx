@@ -6,7 +6,11 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
 
-// Define the columns for the courses table
+/**
+ * The columns for the courses table.
+ *
+ * @type {ColumnDef<Course>[]}
+ */
 export const columns: ColumnDef<Course>[] = [
   {
     accessorKey: "title",
@@ -51,10 +55,24 @@ export const columns: ColumnDef<Course>[] = [
   },
 ];
 
-export default function CoursesTable({ 
-  initialData 
-}: { 
-  initialData: Course[] 
+/**
+ * Renders a table of courses.
+ *
+ * @param { { initialData: Course[] } } props - The component props.
+ * @param {Course[]} props.initialData - The initial data for the table.
+ * @returns {JSX.Element} The rendered courses table.
+ */
+export default function CoursesTable({
+  initialData,
+}: {
+  initialData: Course[];
 }) {
-  return <DataTable columns={columns} data={initialData} searchKey="title" searchPlaceholder="Search courses..." />;
+  return (
+    <DataTable
+      columns={columns}
+      data={initialData}
+      searchKey="title"
+      searchPlaceholder="Search courses..."
+    />
+  );
 }

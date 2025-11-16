@@ -2,6 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAdminCredentials } from '@/lib/auth';
 
+/**
+ * Handles admin login.
+ *
+ * @param {NextRequest} request - The incoming request.
+ * @returns {Promise<NextResponse>} The response.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();

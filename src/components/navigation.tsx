@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, GraduationCap } from "lucide-react";
 
+/**
+ * Renders the navigation component.
+ *
+ * @returns {JSX.Element} The rendered navigation component.
+ */
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
 

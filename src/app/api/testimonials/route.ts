@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+/**
+ * Handles GET requests to the /api/testimonials endpoint.
+ *
+ * @returns {Promise<NextResponse>} The response.
+ */
 export async function GET() {
   try {
     const testimonials = await db.testimonial.findMany({
@@ -19,6 +24,12 @@ export async function GET() {
   }
 }
 
+/**
+ * Handles POST requests to the /api/testimonials endpoint.
+ *
+ * @param {NextRequest} request - The incoming request.
+ * @returns {Promise<NextResponse>} The response.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { name, role, content, avatar } = await request.json();

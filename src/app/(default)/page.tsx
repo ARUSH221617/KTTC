@@ -29,6 +29,11 @@ const statistics = [
   { icon: Users, value: "98%", label: "Satisfaction Rate" },
 ];
 
+/**
+ * Renders the home page.
+ *
+ * @returns {JSX.Element} The rendered home page.
+ */
 export default function HomePage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [featuredCourses, setFeaturedCourses] = useState<any[]>([]);

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+/**
+ * Handles GET requests to the /api/certificates endpoint.
+ *
+ * @param {NextRequest} request - The incoming request.
+ * @returns {Promise<NextResponse>} The response.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -78,6 +84,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * Handles POST requests to create a new certificate.
+ *
+ * @param {NextRequest} request - The incoming request containing certificate data.
+ * @returns {Promise<NextResponse>} The response indicating success or failure.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { certificateNo, holderName, courseId, issueDate } = await request.json();
@@ -150,6 +162,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Handles PUT requests to update a certificate's validity.
+ *
+ * @param {NextRequest} request - The incoming request containing certificate number and validity.
+ * @returns {Promise<NextResponse>} The response indicating success or failure.
+ */
 export async function PUT(request: NextRequest) {
   try {
     const { certificateNo, isValid } = await request.json();

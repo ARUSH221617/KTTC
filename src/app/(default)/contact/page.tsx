@@ -9,6 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin, Clock, Send, Facebook, Twitter, Instagram, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * Renders the contact page.
+ *
+ * @returns {JSX.Element} The rendered contact page.
+ */
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",

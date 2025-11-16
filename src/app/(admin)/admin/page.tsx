@@ -10,6 +10,11 @@ import {
   BarChart3
 } from "lucide-react";
 
+/**
+ * Renders the admin dashboard page.
+ *
+ * @returns {JSX.Element} The rendered admin dashboard page.
+ */
 export default function AdminDashboard() {
   return (
     <div className="p-6">
