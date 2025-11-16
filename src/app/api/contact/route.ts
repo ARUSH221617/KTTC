@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, message } = await request.json();
+    const { name, email, message, subject } = await request.json();
 
     // Validate required fields
     if (!name || !email || !message) {
@@ -28,14 +28,15 @@ export async function POST(request: NextRequest) {
         name,
         email,
         message,
+        subject: subject || 'No Subject' // Default to 'No Subject' if not provided
       },
     });
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: 'Contact message saved successfully',
-        id: contact.id 
+        id: contact.id
       },
       { status: 201 }
     );

@@ -9,40 +9,45 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String     @id @default(cuid())
+  name         String?
+  email        String     @unique
+  password     String
+  role         String     @default("user")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  courses      Course[]
+  certificates Certificate[]
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  category    String
-  level       String
-  duration    String
-  instructor  String
-  thumbnail   String
-  popularity  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  category      String
+  level         String
+  duration      String
+  thumbnail     String
+  price         Float    @default(0)
+  instructorId  String
+  popularity    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  certificates Certificate[]
+  instructor    User      @relation(fields: [instructorId], references: [id])
+  certificates  Certificate[]
 }
 
 model Certificate {
   id            String   @id @default(cuid())
-  certificateNo String   @unique
-  holderName    String
+  certificateNo String?  @unique
+  userId        String
   courseId      String
-  issueDate     DateTime
-  isValid       Boolean  @default(true)
+  issuedDate    DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  user User   @relation(fields: [userId], references: [id])
   course Course @relation(fields: [courseId], references: [id])
 }
 
