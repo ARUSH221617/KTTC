@@ -36,8 +36,6 @@ export default function CoursesPage() {
       const response = await fetch('/api/courses');
       if (response.ok) {
         const coursesData = await response.json();
-        setAllCourses(coursesData);
-        
         // Add additional data for UI purposes
         const enrichedCourses = coursesData.map((course: any) => ({
           ...course,
@@ -45,7 +43,7 @@ export default function CoursesPage() {
           students: Math.floor(Math.random() * 300) + 100, // Random students between 100-400
           price: `$${Math.floor(Math.random() * 400) + 199}` // Random price between $199-$599
         }));
-        
+        setAllCourses(enrichedCourses);
         setCourses(enrichedCourses);
       }
     } catch (error) {
@@ -94,33 +92,25 @@ export default function CoursesPage() {
       });
     }
 
-    // Add additional data for UI purposes
-    const enrichedCourses = filteredCourses.map((course: any) => ({
-      ...course,
-      rating: 4.5 + Math.random() * 0.5,
-      students: Math.floor(Math.random() * 300) + 100,
-      price: `$${Math.floor(Math.random() * 400) + 199}`
-    }));
-
     // Sort courses
     switch (sortBy) {
       case "popular":
-        enrichedCourses.sort((a, b) => b.students - a.students);
+        filteredCourses.sort((a, b) => b.students - a.students);
         break;
       case "rating":
-        enrichedCourses.sort((a, b) => b.rating - a.rating);
+        filteredCourses.sort((a, b) => b.rating - a.rating);
         break;
       case "price-low":
-        enrichedCourses.sort((a, b) => parseInt(a.price.replace('$', '')) - parseInt(b.price.replace('$', '')));
+        filteredCourses.sort((a, b) => parseInt(a.price.replace('$', '')) - parseInt(b.price.replace('$', '')));
         break;
       case "price-high":
-        enrichedCourses.sort((a, b) => parseInt(b.price.replace('$', '')) - parseInt(a.price.replace('$', '')));
+        filteredCourses.sort((a, b) => parseInt(b.price.replace('$', '')) - parseInt(a.price.replace('$', '')));
         break;
       default:
         break;
     }
 
-    setCourses(enrichedCourses);
+    setCourses(filteredCourses);
   };
 
   const clearFilters = () => {
