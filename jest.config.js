@@ -18,8 +18,7 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   transform: {
-    '^.+\\\\.tsx?$': 'ts-jest',
-    '^.+\\\\.ts?$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
 };
 
