@@ -65,12 +65,7 @@ export async function checkAdminCredentials(email: string, password: string) {
   return null;
 }
 
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
+export const authOptions = {
   adapter: PrismaAdapter(db),
   providers: [
     CredentialsProvider({
@@ -117,4 +112,11 @@ export const {
   pages: {
     signIn: "/login",
   },
-});
+};
+
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth(authOptions);

@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    const session = await auth(request);
+    if (!session || session.user?.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -68,8 +67,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    const session = await auth(request);
+    if (!session || session.user?.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -112,8 +111,8 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    const session = await auth(request);
+    if (!session || session.user?.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -156,8 +155,8 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    const session = await auth(request);
+    if (!session || session.user?.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
