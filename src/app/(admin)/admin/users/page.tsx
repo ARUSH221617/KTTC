@@ -1,18 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { User } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  createdAt: string;
-}
+import { User as UserIcon, Plus } from 'lucide-react';
+import { getUsersColumns } from './users-table';
+import { User } from '@/types';
 
 export default function UsersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -34,38 +28,38 @@ export default function UsersPage() {
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       errors.name = 'Name is required';
     }
-    
+
     if (!formData.email.trim()) {
       errors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = 'Email is invalid';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       const method = editingUser ? 'PUT' : 'POST';
-      const url = editingUser 
-        ? `/api/admin/users` 
+      const url = editingUser
+        ? `/api/admin/users`
         : `/api/admin/users`;
-      
+
       const bodyData = editingUser
         ? { id: editingUser.id, ...formData }
         : formData;
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -127,34 +121,7 @@ export default function UsersPage() {
     }
   };
 
-  const columns = [
-    {
-      key: 'name',
-      title: 'Name',
-      render: (user: User) => user.name || 'N/A'
-    },
-    {
-      key: 'email',
-      title: 'Email',
-      render: (user: User) => (
-        <span className="text-blue-600">{user.email}</span>
-      )
-    },
-    {
-      key: 'role',
-      title: 'Role',
-      render: (user: User) => (
-        <Badge variant={user.role === 'admin' ? 'destructive' : 'default'}>
-          {user.role}
-        </Badge>
-      )
-    },
-    {
-      key: 'createdAt',
-      title: 'Created At',
-      render: (user: User) => new Date(user.createdAt).toLocaleDateString()
-    }
-  ];
+  const columns = getUsersColumns(handleEditUser, handleDeleteUser);
 
   return (
     <div className="p-6">
@@ -174,12 +141,12 @@ export default function UsersPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center gap-2 mb-4">
-              <User className="h-5 w-5" />
+              <UserIcon className="h-5 w-5" />
               <h3 className="text-lg font-semibold">
                 {editingUser ? 'Edit User' : 'Add New User'}
               </h3>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
@@ -193,7 +160,7 @@ export default function UsersPage() {
                   />
                   {formErrors.name && <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Email</label>
                   <input
@@ -205,7 +172,7 @@ export default function UsersPage() {
                   />
                   {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Role</label>
                   <select
@@ -218,7 +185,7 @@ export default function UsersPage() {
                   </select>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   type="button"

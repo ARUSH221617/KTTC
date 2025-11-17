@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { NextApiRequest, NextApiResponse } from 'next';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextApiRequest, response: NextApiResponse) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
+    const session = await auth(request, response);
+    if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },

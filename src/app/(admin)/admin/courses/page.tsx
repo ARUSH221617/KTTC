@@ -2,29 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/data-table';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { GraduationCap, DollarSign } from 'lucide-react';
+import { GraduationCap, DollarSign, Plus } from 'lucide-react';
+import { getCoursesColumns, CourseWithInstructor } from './courses-table';
 
 interface User {
   id: string;
   name: string;
 }
 
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  instructor: User;
-  price: number;
-  duration: string;
-  thumbnail: string;
-  createdAt: string;
-}
-
 export default function CoursesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [editingCourse, setEditingCourse] = useState<CourseWithInstructor | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -34,7 +23,6 @@ export default function CoursesPage() {
     thumbnail: ''
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [instructors, setInstructors] = useState<User[]>([]);
 
   // Fetch instructors for the form
   useEffect(() => {
@@ -63,39 +51,39 @@ export default function CoursesPage() {
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
-    
+
     if (!formData.title.trim()) {
       errors.title = 'Title is required';
     }
-    
+
     if (!formData.instructorId) {
       errors.instructorId = 'Instructor is required';
     }
-    
+
     if (formData.price && isNaN(parseFloat(formData.price))) {
       errors.price = 'Price must be a valid number';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       const method = editingCourse ? 'PUT' : 'POST';
-      const url = editingCourse 
-        ? `/api/admin/courses` 
+      const url = editingCourse
+        ? `/api/admin/courses`
         : `/api/admin/courses`;
-      
+
       const bodyData = editingCourse
-        ? { 
-            id: editingCourse.id, 
+        ? {
+            id: editingCourse.id,
             ...formData,
             price: parseFloat(formData.price) || 0
           }
@@ -103,7 +91,7 @@ export default function CoursesPage() {
             ...formData,
             price: parseFloat(formData.price) || 0
           };
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -148,7 +136,7 @@ export default function CoursesPage() {
     setShowAddModal(true);
   };
 
-  const handleEditCourse = (course: Course) => {
+  const handleEditCourse = (course: CourseWithInstructor) => {
     setEditingCourse(course);
     setFormData({
       title: course.title,
@@ -156,12 +144,12 @@ export default function CoursesPage() {
       instructorId: course.instructor.id,
       price: course.price.toString(),
       duration: course.duration,
-      thumbnail: course.thumbnail
+      thumbnail: course.thumbnail || ''
     });
     setShowAddModal(true);
   };
 
-  const handleDeleteCourse = async (course: Course) => {
+  const handleDeleteCourse = async (course: CourseWithInstructor) => {
     try {
       const response = await fetch(`/api/admin/courses?id=${course.id}`, {
         method: 'DELETE'
@@ -182,40 +170,7 @@ export default function CoursesPage() {
     }
   };
 
-  const columns = [
-    {
-      key: 'title',
-      title: 'Title',
-      render: (course: Course) => (
-        <div className="font-medium">{course.title}</div>
-      )
-    },
-    {
-      key: 'instructor',
-      title: 'Instructor',
-      render: (course: Course) => course.instructor.name
-    },
-    {
-      key: 'price',
-      title: 'Price',
-      render: (course: Course) => (
-        <div className="flex items-center">
-          <DollarSign className="h-4 w-4 mr-1 text-green-500" />
-          {course.price.toFixed(2)}
-        </div>
-      )
-    },
-    {
-      key: 'duration',
-      title: 'Duration',
-      render: (course: Course) => course.duration
-    },
-    {
-      key: 'createdAt',
-      title: 'Created At',
-      render: (course: Course) => new Date(course.createdAt).toLocaleDateString()
-    }
-  ];
+  const columns = getCoursesColumns(handleEditCourse, handleDeleteCourse);
 
   return (
     <div className="p-6">
@@ -240,7 +195,7 @@ export default function CoursesPage() {
                 {editingCourse ? 'Edit Course' : 'Add New Course'}
               </h3>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
@@ -254,7 +209,7 @@ export default function CoursesPage() {
                   />
                   {formErrors.title && <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Description</label>
                   <textarea
@@ -265,7 +220,7 @@ export default function CoursesPage() {
                     rows={3}
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Instructor</label>
                   <select
@@ -282,7 +237,7 @@ export default function CoursesPage() {
                   </select>
                   {formErrors.instructorId && <p className="text-red-500 text-sm mt-1">{formErrors.instructorId}</p>}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Price</label>
@@ -298,7 +253,7 @@ export default function CoursesPage() {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium mb-1">Duration</label>
                     <input
@@ -310,7 +265,7 @@ export default function CoursesPage() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Thumbnail URL</label>
                   <input
@@ -322,7 +277,7 @@ export default function CoursesPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   type="button"

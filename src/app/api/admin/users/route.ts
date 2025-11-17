@@ -1,19 +1,20 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { NextApiRequest, NextApiResponse } from 'next';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextApiRequest, response: NextApiResponse) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
+    const session = await auth(request, response);
+    if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url!);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
@@ -64,18 +65,18 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextApiRequest, response: NextApiResponse) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
+    const session = await auth(request, response);
+    if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const body = await request.json();
+    const body = await request.body;
     const { name, email, role } = body;
 
     // Validate required fields
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
+        password: "",
         role: role || 'user',
       },
     });
@@ -108,18 +110,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(request: NextApiRequest, response: NextApiResponse) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
+    const session = await auth(request, response);
+    if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const body = await request.json();
+    const body = await request.body;
     const { id, name, email, role } = body;
 
     if (!id) {
@@ -152,18 +154,18 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(request: NextApiRequest, response: NextApiResponse) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
+    const session = await auth(request, response);
+    if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url!);
     const id = searchParams.get('id');
 
     if (!id) {

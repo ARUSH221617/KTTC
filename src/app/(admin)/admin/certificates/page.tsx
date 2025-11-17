@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/data-table';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Award, Calendar } from 'lucide-react';
+import { Award, Calendar, Plus } from 'lucide-react';
+import { getCertificatesColumns, CertificateWithRelations } from './certificates-table';
 
 interface User {
   id: string;
@@ -17,26 +17,15 @@ interface Course {
   title: string;
 }
 
-interface Certificate {
-  id: string;
-  certificateNo: string | null;
-  user: User;
-  course: Course;
-  issuedDate: string;
-  createdAt: string;
-}
-
 export default function CertificatesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingCertificate, setEditingCertificate] = useState<Certificate | null>(null);
+  const [editingCertificate, setEditingCertificate] = useState<CertificateWithRelations | null>(null);
   const [formData, setFormData] = useState({
     userId: '',
     courseId: '',
     issuedDate: ''
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [users, setUsers] = useState<User[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
 
   // Fetch users and courses for the form
   useEffect(() => {
@@ -73,35 +62,35 @@ export default function CertificatesPage() {
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
-    
+
     if (!formData.userId) {
       errors.userId = 'User is required';
     }
-    
+
     if (!formData.courseId) {
       errors.courseId = 'Course is required';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       const method = editingCertificate ? 'PUT' : 'POST';
-      const url = editingCertificate 
-        ? `/api/admin/certificates` 
+      const url = editingCertificate
+        ? `/api/admin/certificates`
         : `/api/admin/certificates`;
-      
+
       const bodyData = editingCertificate
-        ? { 
-            id: editingCertificate.id, 
+        ? {
+            id: editingCertificate.id,
             issuedDate: formData.issuedDate || new Date().toISOString()
           }
         : {
@@ -109,7 +98,7 @@ export default function CertificatesPage() {
             courseId: formData.courseId,
             issuedDate: formData.issuedDate || new Date().toISOString()
           };
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -148,7 +137,7 @@ export default function CertificatesPage() {
     setShowAddModal(true);
   };
 
-  const handleEditCertificate = (certificate: Certificate) => {
+  const handleEditCertificate = (certificate: CertificateWithRelations) => {
     setEditingCertificate(certificate);
     setFormData({
       userId: certificate.user.id,
@@ -158,7 +147,7 @@ export default function CertificatesPage() {
     setShowAddModal(true);
   };
 
-  const handleDeleteCertificate = async (certificate: Certificate) => {
+  const handleDeleteCertificate = async (certificate: CertificateWithRelations) => {
     try {
       const response = await fetch(`/api/admin/certificates?id=${certificate.id}`, {
         method: 'DELETE'
@@ -179,33 +168,7 @@ export default function CertificatesPage() {
     }
   };
 
-  const columns = [
-    {
-      key: 'certificateNo',
-      title: 'Certificate No',
-      render: (cert: Certificate) => cert.certificateNo || 'N/A'
-    },
-    {
-      key: 'user',
-      title: 'User',
-      render: (cert: Certificate) => cert.user.name
-    },
-    {
-      key: 'course',
-      title: 'Course',
-      render: (cert: Certificate) => cert.course.title
-    },
-    {
-      key: 'issuedDate',
-      title: 'Issued Date',
-      render: (cert: Certificate) => new Date(cert.issuedDate).toLocaleDateString()
-    },
-    {
-      key: 'createdAt',
-      title: 'Created At',
-      render: (cert: Certificate) => new Date(cert.createdAt).toLocaleDateString()
-    }
-  ];
+  const columns = getCertificatesColumns(handleEditCertificate, handleDeleteCertificate);
 
   return (
     <div className="p-6">
@@ -230,7 +193,7 @@ export default function CertificatesPage() {
                 {editingCertificate ? 'Edit Certificate' : 'Issue New Certificate'}
               </h3>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 {!editingCertificate && (
@@ -251,7 +214,7 @@ export default function CertificatesPage() {
                       </select>
                       {formErrors.userId && <p className="text-red-500 text-sm mt-1">{formErrors.userId}</p>}
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium mb-1">Course</label>
                       <select
@@ -270,7 +233,7 @@ export default function CertificatesPage() {
                     </div>
                   </>
                 )}
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Issued Date</label>
                   <div className="relative">
@@ -284,7 +247,7 @@ export default function CertificatesPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   type="button"

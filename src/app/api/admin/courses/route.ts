@@ -1,36 +1,37 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { NextApiRequest, NextApiResponse } from "next";
+import { db } from "@/lib/db";
+import { auth } from "@/lib/auth";
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextApiRequest, response: NextApiResponse) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    console.debug(request.cookies);
+    const session = await auth(request, response);
+    if (!session) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
-    
+    const { searchParams } = new URL(request.url!);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+
     const skip = (page - 1) * limit;
-    
+
     // Get courses with optional search
     const courses = await db.course.findMany({
       where: {
         OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
+          { title: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
         ],
       },
       skip,
       take: limit,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         instructor: true,
       },
@@ -40,12 +41,12 @@ export async function GET(request: NextRequest) {
     const totalCount = await db.course.count({
       where: {
         OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
+          { title: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
         ],
       },
     });
-    
+
     return new Response(
       JSON.stringify({
         courses,
@@ -56,82 +57,90 @@ export async function GET(request: NextRequest) {
           totalPages: Math.ceil(totalCount / limit),
         },
       }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error('Error fetching courses:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch courses' }), {
+    console.error("Error fetching courses:", error);
+    return new Response(JSON.stringify({ error: "Failed to fetch courses" }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextApiRequest, response: NextApiResponse) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    const session = await auth(request, response);
+    if (!session) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
-    const body = await request.json();
-    const { title, description, instructorId, price, duration, thumbnail } = body;
+    const body = await request.body;
+    const { title, description, instructorId, price, duration, thumbnail } =
+      body;
 
     // Validate required fields
     if (!title || !instructorId) {
-      return new Response(JSON.stringify({ error: 'Title and instructor ID are required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: "Title and instructor ID are required" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Create new course
     const newCourse = await db.course.create({
       data: {
         title,
-        description: description || '',
+        description: description || "",
+        category: "Unknown",
+        level: "test",
+        popularity: 1,
         instructorId,
         price: parseFloat(price) || 0,
-        duration: duration || '',
-        thumbnail: thumbnail || '',
+        duration: duration || "",
+        thumbnail: thumbnail || "",
       },
     });
 
     return new Response(JSON.stringify(newCourse), {
       status: 201,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error('Error creating course:', error);
-    return new Response(JSON.stringify({ error: 'Failed to create course' }), {
+    console.error("Error creating course:", error);
+    return new Response(JSON.stringify({ error: "Failed to create course" }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(request: NextApiRequest, response: NextApiResponse) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    const session = await auth(request, response);
+    if (!session) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
-    const body = await request.json();
-    const { id, title, description, instructorId, price, duration, thumbnail } = body;
+    const body = await request.body;
+    const { id, title, description, instructorId, price, duration, thumbnail } =
+      body;
 
     if (!id) {
-      return new Response(JSON.stringify({ error: 'Course ID is required' }), {
+      return new Response(JSON.stringify({ error: "Course ID is required" }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -150,35 +159,38 @@ export async function PUT(request: NextRequest) {
 
     return new Response(JSON.stringify(updatedCourse), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error('Error updating course:', error);
-    return new Response(JSON.stringify({ error: 'Failed to update course' }), {
+    console.error("Error updating course:", error);
+    return new Response(JSON.stringify({ error: "Failed to update course" }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  request: NextApiRequest,
+  response: NextApiResponse
+) {
   try {
     // Verify admin session
-    const session = await auth(request);
-    if (!session || session.user?.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    const session = await auth(request, response);
+    if (!session) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const { searchParams } = new URL(request.url!);
+    const id = searchParams.get("id");
 
     if (!id) {
-      return new Response(JSON.stringify({ error: 'Course ID is required' }), {
+      return new Response(JSON.stringify({ error: "Course ID is required" }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -187,15 +199,18 @@ export async function DELETE(request: NextRequest) {
       where: { id },
     });
 
-    return new Response(JSON.stringify({ message: 'Course deleted successfully' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ message: "Course deleted successfully" }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } catch (error) {
-    console.error('Error deleting course:', error);
-    return new Response(JSON.stringify({ error: 'Failed to delete course' }), {
+    console.error("Error deleting course:", error);
+    return new Response(JSON.stringify({ error: "Failed to delete course" }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 }
