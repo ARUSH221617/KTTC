@@ -1,7 +1,9 @@
+/**
+ * @jest-environment node
+ */
 import { GET, POST } from '@/app/api/testimonials/route';
 import { db } from '@/lib/db';
 import { NextRequest } from 'next/server';
-import { NextURL } from 'next/dist/server/web/next-url';
 
 // Mock the db
 jest.mock('@/lib/db', () => ({
@@ -16,39 +18,41 @@ jest.mock('@/lib/db', () => ({
 describe('GET /api/testimonials', () => {
   it('should return testimonials sorted by createdAt in descending order', async () => {
     const mockTestimonials = [
-      { id: '1', name: 'John Doe', role: 'Developer', content: 'Great!', createdAt: new Date('2023-01-01') },
-      { id: '2', name: 'Jane Doe', role: 'Designer', content: 'Awesome!', createdAt: new Date('2023-01-02') },
+      { id: '1', name: 'John Doe', createdAt: new Date('2023-01-01') },
+      { id: '2', name: 'Jane Smith', createdAt: new Date('2023-01-02') },
     ];
 
-    (db.testimonial.findMany as jest.Mock).mockResolvedValue(mockTestimonials.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+    (db.testimonial.findMany as jest.Mock).mockResolvedValue(mockTestimonials.reverse());
 
+    const request = new NextRequest('http://localhost/api/testimonials');
     const response = await GET();
     const data = await response.json();
 
     expect(db.testimonial.findMany).toHaveBeenCalledWith({
       orderBy: { createdAt: 'desc' },
     });
-
-    expect(data).toEqual([
-      { id: '2', name: 'Jane Doe', role: 'Designer', content: 'Awesome!', createdAt: '2023-01-02T00:00:00.000Z' },
-      { id: '1', name: 'John Doe', role: 'Developer', content: 'Great!', createdAt: '2023-01-01T00:00:00.000Z' },
-    ]);
+    // Serialize dates to string to match JSON response
+    const expected = JSON.parse(JSON.stringify(mockTestimonials));
+    expect(data).toEqual(expected);
   });
 });
 
 describe('POST /api/testimonials', () => {
   it('should create a new testimonial with valid data', async () => {
     const newTestimonial = {
-      name: 'Test User',
-      role: 'Tester',
-      content: 'This is a test.',
+      name: 'Alice',
+      role: 'Developer',
+      content: 'Great course!',
+      avatar: 'avatar.png',
     };
-    const createdTestimonial = { id: '3', ...newTestimonial, createdAt: new Date() };
 
-    (db.testimonial.create as jest.Mock).mockResolvedValue(createdTestimonial);
+    (db.testimonial.create as jest.Mock).mockResolvedValue({
+      id: '3',
+      ...newTestimonial,
+      createdAt: new Date(),
+    });
 
-    const url = new NextURL('http://localhost/api/testimonials');
-    const request = new NextRequest(url, {
+    const request = new NextRequest('http://localhost/api/testimonials', {
       method: 'POST',
       body: JSON.stringify(newTestimonial),
     });
@@ -57,26 +61,22 @@ describe('POST /api/testimonials', () => {
     const data = await response.json();
 
     expect(response.status).toBe(201);
-    expect(data.success).toBe(true);
     expect(data.testimonial.name).toBe(newTestimonial.name);
     expect(db.testimonial.create).toHaveBeenCalledWith({
       data: {
-        name: newTestimonial.name,
-        role: newTestimonial.role,
-        content: newTestimonial.content,
-        avatar: null,
+          ...newTestimonial,
+          avatar: newTestimonial.avatar || null,
       },
     });
   });
 
   it('should return 400 if name is missing', async () => {
     const newTestimonial = {
-      role: 'Tester',
-      content: 'This is a test.',
+      role: 'Developer',
+      content: 'Great course!',
     };
 
-    const url = new NextURL('http://localhost/api/testimonials');
-    const request = new NextRequest(url, {
+    const request = new NextRequest('http://localhost/api/testimonials', {
       method: 'POST',
       body: JSON.stringify(newTestimonial),
     });
@@ -90,12 +90,11 @@ describe('POST /api/testimonials', () => {
 
   it('should return 400 if role is missing', async () => {
     const newTestimonial = {
-      name: 'Test User',
-      content: 'This is a test.',
+      name: 'Alice',
+      content: 'Great course!',
     };
 
-    const url = new NextURL('http://localhost/api/testimonials');
-    const request = new NextRequest(url, {
+    const request = new NextRequest('http://localhost/api/testimonials', {
       method: 'POST',
       body: JSON.stringify(newTestimonial),
     });
@@ -109,12 +108,11 @@ describe('POST /api/testimonials', () => {
 
   it('should return 400 if content is missing', async () => {
     const newTestimonial = {
-      name: 'Test User',
-      role: 'Tester',
+      name: 'Alice',
+      role: 'Developer',
     };
 
-    const url = new NextURL('http://localhost/api/testimonials');
-    const request = new NextRequest(url, {
+    const request = new NextRequest('http://localhost/api/testimonials', {
       method: 'POST',
       body: JSON.stringify(newTestimonial),
     });

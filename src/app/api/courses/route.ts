@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
-        { instructor: { contains: search, mode: 'insensitive' } }
+        { instructor: { name: { contains: search, mode: 'insensitive' } } }
       ];
     }
 
@@ -47,6 +47,13 @@ export async function GET(request: NextRequest) {
     const courses = await db.course.findMany({
       where,
       orderBy: order,
+      include: {
+        instructor: {
+          select: {
+            name: true,
+          }
+        }
+      }
     });
 
     return NextResponse.json(courses);
@@ -61,10 +68,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, category, level, duration, instructor, thumbnail } = await request.json();
+    const { title, description, category, level, duration, instructorId, thumbnail } = await request.json();
 
     // Validate required fields
-    if (!title || !description || !category || !level || !duration || !instructor) {
+    if (!title || !description || !category || !level || !duration || !instructorId) {
       return NextResponse.json(
         { error: 'All required fields must be provided' },
         { status: 400 }
@@ -79,7 +86,7 @@ export async function POST(request: NextRequest) {
         category,
         level,
         duration,
-        instructor,
+        instructor: { connect: { id: instructorId } },
         thumbnail: thumbnail || null,
       },
     });

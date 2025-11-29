@@ -16,10 +16,12 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Search, Clock, Users, BookOpen, Star, Filter, ChevronDown } from "lucide-react";
+import Link from "next/link";
 
 const categories = ["All", "Teaching Skills", "Psychology", "Management", "Technology", "Curriculum", "Special Education", "Assessment", "Leadership", "Early Education"];
 const levels = ["All", "Beginner", "Intermediate", "Advanced"];
 const durations = ["All", "Short (1-4 weeks)", "Medium (5-8 weeks)", "Long (9+ weeks)"];
+const COURSES_PER_PAGE = 6;
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -31,6 +33,8 @@ export default function CoursesPage() {
   const [sortBy, setSortBy] = useState("popular");
   const [isLoaded, setIsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(COURSES_PER_PAGE);
+  const [filteredCount, setFilteredCount] = useState(0);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -54,7 +58,7 @@ export default function CoursesPage() {
           price: `$${Math.floor(Math.random() * 400) + 199}` // Random price between $199-$599
         }));
         setAllCourses(enrichedCourses);
-        setCourses(enrichedCourses);
+        // Initially setting courses will be handled by filterAndSortCourses
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -64,30 +68,30 @@ export default function CoursesPage() {
   };
 
   const filterAndSortCourses = () => {
-    let filteredCourses = [...allCourses];
+    let filtered = [...allCourses];
 
     // Filter by search term
     if (searchTerm) {
-      filteredCourses = filteredCourses.filter(course =>
+      filtered = filtered.filter(course =>
         course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+        course.instructor?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Filter by category
     if (selectedCategory !== "All") {
-      filteredCourses = filteredCourses.filter(course => course.category === selectedCategory);
+      filtered = filtered.filter(course => course.category === selectedCategory);
     }
 
     // Filter by level
     if (selectedLevel !== "All") {
-      filteredCourses = filteredCourses.filter(course => course.level === selectedLevel);
+      filtered = filtered.filter(course => course.level === selectedLevel);
     }
 
     // Filter by duration
     if (selectedDuration !== "All") {
-      filteredCourses = filteredCourses.filter(course => {
+      filtered = filtered.filter(course => {
         const weeks = parseInt(course.duration);
         switch (selectedDuration) {
           case "Short (1-4 weeks)":
@@ -105,22 +109,29 @@ export default function CoursesPage() {
     // Sort courses
     switch (sortBy) {
       case "popular":
-        filteredCourses.sort((a, b) => b.students - a.students);
+        filtered.sort((a, b) => b.students - a.students);
         break;
       case "rating":
-        filteredCourses.sort((a, b) => b.rating - a.rating);
+        filtered.sort((a, b) => b.rating - a.rating);
         break;
       case "price-low":
-        filteredCourses.sort((a, b) => parseInt(a.price.replace('$', '')) - parseInt(b.price.replace('$', '')));
+        filtered.sort((a, b) => parseInt(a.price.replace('$', '')) - parseInt(b.price.replace('$', '')));
         break;
       case "price-high":
-        filteredCourses.sort((a, b) => parseInt(b.price.replace('$', '')) - parseInt(a.price.replace('$', '')));
+        filtered.sort((a, b) => parseInt(b.price.replace('$', '')) - parseInt(a.price.replace('$', '')));
         break;
       default:
         break;
     }
 
-    setCourses(filteredCourses);
+    setFilteredCount(filtered.length);
+    setCourses(filtered);
+  };
+
+  // Wrapper to reset pagination when filter changes
+  const handleFilterChange = (setter: any, value: any) => {
+    setter(value);
+    setVisibleCount(COURSES_PER_PAGE);
   };
 
   const clearFilters = () => {
@@ -129,7 +140,15 @@ export default function CoursesPage() {
     setSelectedLevel("All");
     setSelectedDuration("All");
     setSortBy("popular");
+    setVisibleCount(COURSES_PER_PAGE);
   };
+
+  const loadMore = () => {
+    setVisibleCount(prev => prev + COURSES_PER_PAGE);
+  };
+
+  // Get currently visible courses
+  const visibleCourses = courses.slice(0, visibleCount);
 
   return (
     <div className="min-h-screen">
@@ -161,7 +180,7 @@ export default function CoursesPage() {
                   type="text"
                   placeholder="Search courses by title, instructor, or keyword..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleFilterChange(setSearchTerm, e.target.value)}
                   className="pl-12 pr-4 py-3 text-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
@@ -186,7 +205,7 @@ export default function CoursesPage() {
                       <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         Category
                       </label>
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <Select value={selectedCategory} onValueChange={(val) => handleFilterChange(setSelectedCategory, val)}>
                         <SelectTrigger className="border-gray-300">
                           <SelectValue placeholder="Category" />
                         </SelectTrigger>
@@ -202,7 +221,7 @@ export default function CoursesPage() {
                       <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         Level
                       </label>
-                      <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                      <Select value={selectedLevel} onValueChange={(val) => handleFilterChange(setSelectedLevel, val)}>
                         <SelectTrigger className="border-gray-300">
                           <SelectValue placeholder="Level" />
                         </SelectTrigger>
@@ -218,7 +237,7 @@ export default function CoursesPage() {
                       <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         Duration
                       </label>
-                      <Select value={selectedDuration} onValueChange={setSelectedDuration}>
+                      <Select value={selectedDuration} onValueChange={(val) => handleFilterChange(setSelectedDuration, val)}>
                         <SelectTrigger className="border-gray-300">
                           <SelectValue placeholder="Duration" />
                         </SelectTrigger>
@@ -234,7 +253,7 @@ export default function CoursesPage() {
                       <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         Sort By
                       </label>
-                      <Select value={sortBy} onValueChange={setSortBy}>
+                      <Select value={sortBy} onValueChange={(val) => handleFilterChange(setSortBy, val)}>
                         <SelectTrigger className="border-gray-300">
                           <SelectValue placeholder="Sort by" />
                         </SelectTrigger>
@@ -266,7 +285,7 @@ export default function CoursesPage() {
             {/* Results Count */}
             <div className="text-center">
               <p className="text-gray-600">
-                Showing <span className="font-semibold text-gray-900">{courses.length}</span> courses
+                Showing <span className="font-semibold text-gray-900">{visibleCourses.length}</span> of <span className="font-semibold text-gray-900">{filteredCount}</span> courses
               </p>
             </div>
           </div>
@@ -290,9 +309,9 @@ export default function CoursesPage() {
                 </Card>
               ))}
             </div>
-          ) : courses.length > 0 ? (
+          ) : visibleCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {courses.map((course, index) => (
+              {visibleCourses.map((course, index) => (
                 <Card key={course.id} className={`hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: `${index * 0.1}s` }}>
                   <div className="relative">
                     <img
@@ -325,7 +344,7 @@ export default function CoursesPage() {
                   
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span className="font-medium">{course.instructor}</span>
+                      <span className="font-medium">{course.instructor?.name || 'Instructor'}</span>
                       <div className="flex items-center space-x-1">
                         <Clock className="h-4 w-4" />
                         <span>{course.duration}</span>
@@ -349,9 +368,11 @@ export default function CoursesPage() {
                     </div>
                     
                     <div className="flex space-x-2">
-                      <Button disabled className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        View Details
+                      <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                        <Link href={`/courses/${course.id}`}>
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          View Details
+                        </Link>
                       </Button>
                       <Button disabled variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed">
                         <ChevronDown className="h-4 w-4" />
@@ -375,10 +396,14 @@ export default function CoursesPage() {
       </section>
 
       {/* Load More / Pagination */}
-      {courses.length > 0 && (
+      {visibleCourses.length < filteredCount && (
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3">
+            <Button
+              onClick={loadMore}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3"
+            >
               Load More Courses
             </Button>
           </div>
