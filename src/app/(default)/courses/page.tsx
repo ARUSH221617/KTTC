@@ -153,7 +153,7 @@ export default function CoursesPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-50 to-indigo-100 py-20 lg:py-32">
+      <section className="relative bg-linear-to-br from-blue-50 to-indigo-100 py-20 lg:py-32">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-8">
             <div className={`space-y-4 ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`}>
@@ -181,7 +181,7 @@ export default function CoursesPage() {
                   placeholder="Search courses by title, instructor, or keyword..."
                   value={searchTerm}
                   onChange={(e) => handleFilterChange(setSearchTerm, e.target.value)}
-                  className="pl-12 pr-4 py-3 text-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  className="pl-12 w-full h-full pr-4 py-3 text-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
 

@@ -49,3 +49,4 @@ prompt
 server.logprisma/dev.db
 
 prisma/dev.db
+.env*.local
