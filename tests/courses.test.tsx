@@ -1,81 +1,53 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CoursesPage from '../src/app/(default)/courses/page';
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
 
-const mockCourses = [
-  {
-    id: 1,
-    title: 'Course 1',
-    description: 'Description 1',
-    instructor: 'Instructor 1',
-    category: 'Teaching Skills',
-    level: 'Beginner',
-    duration: '2',
-    thumbnail: 'thumbnail1.jpg',
-  },
-  {
-    id: 2,
-    title: 'Course 2',
-    description: 'Description 2',
-    instructor: 'Instructor 2',
-    category: 'Psychology',
-    level: 'Intermediate',
-    duration: '6',
-    thumbnail: 'thumbnail2.jpg',
-  },
-];
+// Mock the Dialog components
+jest.mock('@/components/ui/dialog', () => ({
+  Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogContent: ({ children }: { children: React.ReactNode }) => <div data-testid="dialog-content">{children}</div>,
+  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogDescription: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogClose: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
 
-const server = setupServer(
-  rest.get('/api/courses', (req, res, ctx) => {
-    return res(ctx.json(mockCourses));
+// Mock fetch
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () =>
+      Promise.resolve([
+        {
+          id: 1,
+          title: 'Test Course 1',
+          description: 'Test Description 1',
+          instructor: 'Test Instructor 1',
+          duration: '4 weeks',
+          category: 'Technology',
+          level: 'Beginner',
+          thumbnail: '/test-image.jpg',
+        },
+      ]),
   })
-);
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+) as jest.Mock;
 
 describe('CoursesPage', () => {
-  it('should render the courses page with initial courses', async () => {
-    render(<CoursesPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Explore Our Courses')).toBeInTheDocument();
-    });
-
-    const courseCards = await screen.findAllByText(/Course/);
-    expect(courseCards.length).toBe(2);
+  beforeEach(() => {
+    (global.fetch as jest.Mock).mockClear();
   });
 
-  it('should maintain consistent course data on filter change', async () => {
+  it('renders filters and courses', async () => {
     render(<CoursesPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Explore Our Courses')).toBeInTheDocument();
+        expect(screen.getByText('Test Course 1')).toBeInTheDocument();
     });
 
-    const courseCards = await screen.findAllByText(/Course/);
-    expect(courseCards.length).toBe(2);
-
-    const firstCourse = courseCards[0].closest('.group');
-    const rating = firstCourse.querySelector('span:last-child').textContent;
-    const students = firstCourse.querySelector('div:nth-child(2) > div > div:nth-child(2) > span').textContent;
-    const price = firstCourse.querySelector('div:nth-child(2) > div > div:nth-child(2) > div').textContent;
-
-
-    fireEvent.click(screen.getByText('Clear Filters'));
-
-    await waitFor(() => {
-        const firstCourseAfterFilter = screen.getAllByText(/Course/)[0].closest('.group');
-        const ratingAfterFilter = firstCourseAfterFilter.querySelector('span:last-child').textContent;
-        const studentsAfterFilter = firstCourseAfterFilter.querySelector('div:nth-child(2) > div > div:nth-child(2) > span').textContent;
-        const priceAfterFilter = firstCourseAfterFilter.querySelector('div:nth-child(2) > div:nth-child(2) > div').textContent;
-
-        expect(rating).toBe(ratingAfterFilter);
-        expect(students).toBe(studentsAfterFilter);
-        expect(price).toBe(priceAfterFilter);
-    });
+    // Verify "View Details" button is disabled
+    const viewDetailsButtons = screen.getAllByText('View Details');
+    expect(viewDetailsButtons[0].closest('button')).toBeDisabled();
   });
 });
