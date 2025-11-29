@@ -21,6 +21,7 @@ import {
   ArrowRight,
   CheckCircle,
 } from "lucide-react";
+import Image from "next/image";
 
 const statistics = [
   { icon: GraduationCap, value: "1,200+", label: "Trained Teachers" },
@@ -38,7 +39,7 @@ export default function HomePage() {
     category: string;
     level: string;
     duration: string;
-    instructor: string;  // Processed to always be string
+    instructor: string; // Processed to always be string
     thumbnail?: string;
   };
 
@@ -67,11 +68,12 @@ export default function HomePage() {
         let coursesData = await coursesResponse.json();
 
         // Process courses to handle potential nested instructor objects
-        coursesData = coursesData.map(course => ({
+        coursesData = coursesData.map((course) => ({
           ...course,
-          instructor: typeof course.instructor === 'object' && course.instructor?.name
-            ? course.instructor.name
-            : course.instructor || 'Unknown Instructor'
+          instructor:
+            typeof course.instructor === "object" && course.instructor?.name
+              ? course.instructor.name
+              : course.instructor || "Unknown Instructor",
         }));
 
         setFeaturedCourses(coursesData.slice(0, 3)); // Show first 3 courses
@@ -83,10 +85,16 @@ export default function HomePage() {
         let testimonialsData = await testimonialsResponse.json();
 
         // Process testimonials to ensure proper structure
-        testimonialsData = testimonialsData.map(testimonial => ({
+        testimonialsData = testimonialsData.map((testimonial) => ({
           ...testimonial,
-          name: typeof testimonial.name === 'string' ? testimonial.name : testimonial.name?.toString() || 'Unknown',
-          role: typeof testimonial.role === 'string' ? testimonial.role : testimonial.role?.toString() || 'Unknown Role'
+          name:
+            typeof testimonial.name === "string"
+              ? testimonial.name
+              : testimonial.name?.toString() || "Unknown",
+          role:
+            typeof testimonial.role === "string"
+              ? testimonial.role
+              : testimonial.role?.toString() || "Unknown Role",
         }));
 
         setTestimonials(testimonialsData.slice(0, 3)); // Show first 3 testimonials
@@ -152,13 +160,15 @@ export default function HomePage() {
               }`}
             >
               <div className="relative z-10">
-                <img
-                  src="/api/placeholder/600/400"
+                <Image
+                  src="/images/hero.png"
+                  width={400}
+                  height={400}
                   alt="Teacher in classroom"
-                  className="rounded-2xl shadow-2xl w-full"
+                  className="rounded-2xl shadow-2xl w-full z-0"
                 />
               </div>
-              <div className="absolute -bottom-6 -left-6 bg-yellow-400 text-blue-900 p-4 rounded-xl shadow-lg">
+              <div className="absolute -bottom-6 -left-6 z-10 bg-yellow-400 text-blue-900 p-4 rounded-xl shadow-lg">
                 <div className="flex items-center space-x-2">
                   <Award className="h-8 w-8" />
                   <div>
@@ -176,13 +186,13 @@ export default function HomePage() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <img
-                src="/api/placeholder/500/300"
-                alt="KTTC Campus"
-                className="rounded-xl shadow-lg w-full"
-              />
-            </div>
+            <Image
+              src="/images/about.png"
+              width={400}
+              height={400}
+              alt="KTTC Campus"
+              className="rounded-xl shadow-lg w-full"
+            />
             <div className="space-y-6">
               <div className="space-y-2">
                 <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
@@ -263,9 +273,7 @@ export default function HomePage() {
                         {course.description}
                       </CardDescription>
                       <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>
-                          {course.instructor}
-                        </span>
+                        <span>{course.instructor}</span>
                         <span>{course.duration}</span>
                       </div>
                       <Link href={`/courses/${course.id}`}>
