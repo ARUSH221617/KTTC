@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const { title, description, category, level, duration, instructorId, thumbnail } = await request.json();
 
     // Validate required fields
-    if (!title || !description || !category || !level || !duration || !instructorId) {
+    if (!title || !description || !category || !level || !duration || !instructorId || !thumbnail) {
       return NextResponse.json(
         { error: 'All required fields must be provided' },
         { status: 400 }
