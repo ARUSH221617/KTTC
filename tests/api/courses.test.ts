@@ -1,7 +1,9 @@
+/**
+ * @jest-environment node
+ */
 import { GET } from '@/app/api/courses/route';
 import { db } from '@/lib/db';
 import { NextRequest } from 'next/server';
-import { NextURL } from 'next/dist/server/web/next-url';
 
 // Mock the db
 jest.mock('@/lib/db', () => ({
@@ -22,7 +24,8 @@ describe('GET /api/courses', () => {
 
     (db.course.findMany as jest.Mock).mockResolvedValue(mockCourses.sort((a, b) => b.popularity - a.popularity));
 
-    const url = new NextURL('http://localhost/api/courses?sortBy=popularity');
+    // Construct the URL string directly
+    const url = 'http://localhost/api/courses?sortBy=popularity';
     const request = new NextRequest(url);
 
     const response = await GET(request);
@@ -31,6 +34,13 @@ describe('GET /api/courses', () => {
     expect(db.course.findMany).toHaveBeenCalledWith({
       where: {},
       orderBy: { popularity: 'desc' },
+      include: {
+        instructor: {
+            select: {
+                name: true
+            }
+        }
+      }
     });
 
     expect(data).toEqual([

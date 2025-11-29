@@ -46,8 +46,9 @@ describe('CoursesPage', () => {
         expect(screen.getByText('Test Course 1')).toBeInTheDocument();
     });
 
-    // Verify "View Details" button is disabled
+    // Verify "View Details" button is enabled
     const viewDetailsButtons = screen.getAllByText('View Details');
-    expect(viewDetailsButtons[0].closest('button')).toBeDisabled();
+    const link = viewDetailsButtons[0].closest('a');
+    expect(link).toHaveAttribute('href', '/courses/1');
   });
 });
