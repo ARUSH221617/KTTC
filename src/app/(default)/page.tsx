@@ -31,8 +31,27 @@ const statistics = [
 
 export default function HomePage() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [featuredCourses, setFeaturedCourses] = useState<any[]>([]);
-  const [testimonials, setTestimonials] = useState<any[]>([]);
+  type CourseType = {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    level: string;
+    duration: string;
+    instructor: string;  // Processed to always be string
+    thumbnail?: string;
+  };
+
+  const [featuredCourses, setFeaturedCourses] = useState<CourseType[]>([]);
+  type TestimonialType = {
+    id: string;
+    name: string;
+    role: string;
+    content: string;
+    avatar?: string;
+  };
+
+  const [testimonials, setTestimonials] = useState<TestimonialType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,14 +64,31 @@ export default function HomePage() {
       // Fetch courses
       const coursesResponse = await fetch("/api/courses");
       if (coursesResponse.ok) {
-        const coursesData = await coursesResponse.json();
+        let coursesData = await coursesResponse.json();
+
+        // Process courses to handle potential nested instructor objects
+        coursesData = coursesData.map(course => ({
+          ...course,
+          instructor: typeof course.instructor === 'object' && course.instructor?.name
+            ? course.instructor.name
+            : course.instructor || 'Unknown Instructor'
+        }));
+
         setFeaturedCourses(coursesData.slice(0, 3)); // Show first 3 courses
       }
 
       // Fetch testimonials
       const testimonialsResponse = await fetch("/api/testimonials");
       if (testimonialsResponse.ok) {
-        const testimonialsData = await testimonialsResponse.json();
+        let testimonialsData = await testimonialsResponse.json();
+
+        // Process testimonials to ensure proper structure
+        testimonialsData = testimonialsData.map(testimonial => ({
+          ...testimonial,
+          name: typeof testimonial.name === 'string' ? testimonial.name : testimonial.name?.toString() || 'Unknown',
+          role: typeof testimonial.role === 'string' ? testimonial.role : testimonial.role?.toString() || 'Unknown Role'
+        }));
+
         setTestimonials(testimonialsData.slice(0, 3)); // Show first 3 testimonials
       }
     } catch (error) {
@@ -227,10 +263,12 @@ export default function HomePage() {
                         {course.description}
                       </CardDescription>
                       <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>{course.instructor}</span>
+                        <span>
+                          {course.instructor}
+                        </span>
                         <span>{course.duration}</span>
                       </div>
-                      <Link href="/courses">
+                      <Link href={`/courses/${course.id}`}>
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                           View Course
                         </Button>
@@ -370,7 +408,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3"
+                  className="border-white text-black hover:bg-white hover:text-blue-600 px-8 py-3"
                 >
                   Contact Us
                 </Button>
