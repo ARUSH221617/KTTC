@@ -2,6 +2,14 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Input component.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {string} props.type - Input type.
+ * @returns {JSX.Element} The rendered Input.
+ */
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input

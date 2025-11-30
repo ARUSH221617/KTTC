@@ -25,6 +25,15 @@ const badgeVariants = cva(
   }
 )
 
+/**
+ * Badge component for status indicators or labels.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {string} props.variant - The visual style of the badge.
+ * @param {boolean} props.asChild - Whether to render as a child component.
+ * @returns {JSX.Element} The rendered Badge.
+ */
 function Badge({
   className,
   variant,

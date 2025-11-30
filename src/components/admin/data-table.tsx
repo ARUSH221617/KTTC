@@ -1,155 +1,218 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { 
+import { useState, useEffect } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationLink,
   PaginationNext,
-  PaginationPrevious 
-} from '@/components/ui/pagination';
-import { 
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogFooter 
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { 
-  Plus, 
-  Search, 
   MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  Eye,
+  Search,
+  Plus,
   Download,
-  Filter
-} from 'lucide-react';
-import { toast } from 'sonner';
+  Trash2, 
+  Edit,
+  Eye
+} from "lucide-react";
+import { toast } from "sonner";
+import { useRouter, useSearchParams } from "next/navigation";
 
-interface DataTableProps<T> {
-  columns: Array<{
-    key: string;
-    title: string;
-    render?: (item: T) => React.ReactNode;
-    className?: string;
-  }>;
-  fetchData: (params: { page: number; limit: number; search: string }) => Promise<{ data: T[]; pagination: any }>;
-  onAdd?: () => void;
-  onEdit?: (item: T) => void;
-  onDelete?: (item: T) => void;
-  onView?: (item: T) => void;
-  exportData?: () => Promise<void>;
-  filters?: Array<{
-    key: string;
-    title: string;
-    options: Array<{ value: string; label: string }>;
-  }>;
+/**
+ * Filter definition interface.
+ */
+interface Filter {
+  /** The key in the data object to filter by. */
+  key: string;
+  /** The display title for the filter. */
   title: string;
+  /** Options for the filter dropdown. */
+  options: { label: string; value: string }[];
+}
+
+/**
+ * Column definition interface.
+ */
+interface Column<T> {
+  /** The key in the data object to display. */
+  key: string;
+  /** The display title for the column header. */
+  title: string;
+  /** Optional class names for the column. */
+  className?: string;
+  /** Optional custom render function for the cell content. */
+  render?: (item: T) => React.ReactNode;
+}
+
+/**
+ * Props for the DataTable component.
+ */
+interface DataTableProps<T> {
+  /** The title of the data table. */
+  title: string;
+  /** Configuration for the columns. */
+  columns: Column<T>[];
+  /** Configuration for the filters. */
+  filters?: Filter[];
+  /** Function to fetch data from the API. */
+  fetchData: (params: any) => Promise<{ data: T[]; pagination: any }>;
+  /** Callback function when the "View" action is clicked. */
+  onView?: (item: T) => void;
+  /** Callback function when the "Edit" action is clicked. */
+  onEdit?: (item: T) => void;
+  /** Callback function when the "Delete" action is clicked. */
+  onDelete?: (item: T) => Promise<void>;
+  /** Callback function when the "Add" button is clicked. */
+  onAdd?: () => void;
+  /** Label for the "Add" button. */
   addButtonLabel?: string;
+  /** Callback function when the "Export" button is clicked. */
+  exportData?: () => void;
+  /** Placeholder text for the search input. */
   searchPlaceholder?: string;
 }
 
-export default function DataTable<T>({
+/**
+ * A reusable data table component with search, filtering, pagination, and actions.
+ *
+ * @template T The type of the data items.
+ * @param {DataTableProps<T>} props - The component props.
+ * @returns {JSX.Element} The rendered data table.
+ */
+export function DataTable<T extends { id: string }>({
+  title,
   columns,
+  filters = [],
   fetchData,
-  onAdd,
+  onView,
   onEdit,
   onDelete,
-  onView,
+  onAdd,
+  addButtonLabel = "Add New",
   exportData,
-  filters = [],
-  title,
-  addButtonLabel = 'Add New',
-  searchPlaceholder = 'Search...'
+  searchPlaceholder = "Search...",
 }: DataTableProps<T>) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [data, setData] = useState<T[]>([]);
-  const [pagination, setPagination] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-  const [search, setSearch] = useState('');
+  const [limit, setLimit] = useState(10);
+  const [pagination, setPagination] = useState<any>(null);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<T | null>(null);
 
-  // Fetch data when page, search, or filters change
+  // Initial load
   useEffect(() => {
-    const fetchDataWithParams = async () => {
-      setLoading(true);
-      try {
-        const params = {
-          page,
-          limit,
-          search,
-          ...selectedFilters
-        };
-        const response = await fetchData(params);
-        setData(response.data);
-        setPagination(response.pagination);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Failed to fetch data');
-      } finally {
-        setLoading(false);
-      }
-    };
+    loadData();
+  }, [page, limit, search, selectedFilters]);
 
-    fetchDataWithParams();
-  }, [page, search, selectedFilters, fetchData]);
+  /**
+   * Loads data from the API based on current state (search, pagination, filters).
+   */
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        limit,
+        search,
+        ...selectedFilters,
+      };
+      const response = await fetchData(params);
+      setData(response.data);
+      setPagination(response.pagination);
+    } catch (error) {
+      console.error("Failed to load data:", error);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  /**
+   * Handles search input changes with debounce.
+   * @param {string} value - The new search value.
+   */
   const handleSearch = (value: string) => {
     setSearch(value);
-    setPage(1); // Reset to first page when searching
+    setPage(1); // Reset to first page on search
   };
 
-  const handleFilterChange = (filterKey: string, value: string) => {
-    setSelectedFilters(prev => ({
+  /**
+   * Handles filter changes.
+   * @param {string} key - The filter key.
+   * @param {string} value - The selected filter value.
+   */
+  const handleFilterChange = (key: string, value: string) => {
+    setSelectedFilters((prev) => ({
       ...prev,
-      [filterKey]: value
+      [key]: value === "all" ? "" : value,
     }));
-    setPage(1); // Reset to first page when filtering
+    setPage(1); // Reset to first page on filter change
   };
 
+  /**
+   * Initiates the delete confirmation process.
+   * @param {T} item - The item to delete.
+   */
   const handleDeleteItem = (item: T) => {
     setItemToDelete(item);
     setShowDeleteDialog(true);
   };
 
+  /**
+   * Confirms and executes the deletion of an item.
+   */
   const confirmDelete = async () => {
     if (itemToDelete && onDelete) {
       try {
         await onDelete(itemToDelete);
         toast.success('Item deleted successfully');
-        // Refresh data after deletion
-        const params = { page, limit, search, ...selectedFilters };
+        // Reload data after deletion
+        const params = {
+          page,
+          limit,
+          search,
+          ...selectedFilters,
+        };
         const response = await fetchData(params);
         setData(response.data);
         setPagination(response.pagination);
@@ -162,6 +225,12 @@ export default function DataTable<T>({
     setItemToDelete(null);
   };
 
+  /**
+   * Renders the content of a table cell.
+   * @param {T} item - The data item.
+   * @param {Column<T>} column - The column definition.
+   * @returns {React.ReactNode} The rendered cell content.
+   */
   const renderCell = (item: T, column: any) => {
     if (column.render) {
       return column.render(item);

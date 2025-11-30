@@ -1,4 +1,3 @@
-
 import { randomBytes } from 'crypto';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -12,7 +11,13 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback_jwt_secret_for_development'
 );
 
-// Function to create an admin session token using JWT
+/**
+ * Creates an admin session token using JWT.
+ *
+ * @param {string} userId - The ID of the user.
+ * @param {string} email - The email of the user.
+ * @returns {Promise<string>} A promise that resolves to the signed JWT token.
+ */
 export async function createAdminSession(userId: string, email: string): Promise<string> {
   const token = await new SignJWT({ userId, email })
     .setProtectedHeader({ alg: 'HS256' })
@@ -23,7 +28,12 @@ export async function createAdminSession(userId: string, email: string): Promise
   return token;
 }
 
-// Function to validate an admin session token
+/**
+ * Validates an admin session token.
+ *
+ * @param {string} token - The JWT token to validate.
+ * @returns {Promise<boolean>} A promise that resolves to true if valid, false otherwise.
+ */
 export async function validateAdminSession(token: string): Promise<boolean> {
   try {
     await jwtVerify(token, JWT_SECRET);
@@ -34,7 +44,12 @@ export async function validateAdminSession(token: string): Promise<boolean> {
   }
 }
 
-// Function to get admin session data
+/**
+ * Retrieves data from an admin session token.
+ *
+ * @param {string} token - The JWT token to decode.
+ * @returns {Promise<{ userId: string; email: string } | null>} The session payload or null if invalid.
+ */
 export async function getAdminSessionData(token: string) {
   try {
     const verified = await jwtVerify(token, JWT_SECRET);
@@ -45,14 +60,25 @@ export async function getAdminSessionData(token: string) {
   }
 }
 
-// Function to clear an admin session (not needed for JWT)
+/**
+ * Clears an admin session.
+ * For JWT, this is client-side, so this function is a placeholder/helper.
+ *
+ * @returns {boolean} Always returns true.
+ */
 export function clearAdminSession(): boolean {
   // For JWT, we don't actually clear anything server-side
   // The client needs to remove the cookie
   return true;
 }
 
-// Function to check admin credentials
+/**
+ * Verifies admin credentials against the database.
+ *
+ * @param {string} email - The email address.
+ * @param {string} password - The password.
+ * @returns {Promise<object|null>} The user object if credentials are valid, null otherwise.
+ */
 export async function checkAdminCredentials(email: string, password: string) {
   const user = await db.user.findUnique({
     where: { email },
@@ -65,6 +91,9 @@ export async function checkAdminCredentials(email: string, password: string) {
   return null;
 }
 
+/**
+ * NextAuth configuration options.
+ */
 export const authOptions = {
   adapter: PrismaAdapter(db),
   providers: [
