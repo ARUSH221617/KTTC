@@ -5,14 +5,15 @@ import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
+/**
+ * Root Command component (command palette).
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Command.
+ */
 function Command({
   className,
   ...props
@@ -29,30 +30,23 @@ function Command({
   )
 }
 
+/**
+ * Command palette inside a Dialog.
+ *
+ * @param {object} props - The component props.
+ * @param {React.ReactNode} props.children - Child components.
+ * @param {boolean} props.open - Whether the dialog is open.
+ * @param {function} props.onOpenChange - Callback for open state changes.
+ * @returns {JSX.Element} The rendered Command Dialog.
+ */
 function CommandDialog({
-  title = "Command Palette",
-  description = "Search for a command to run...",
   children,
-  className,
-  showCloseButton = true,
   ...props
-}: React.ComponentProps<typeof Dialog> & {
-  title?: string
-  description?: string
-  className?: string
-  showCloseButton?: boolean
-}) {
+}: React.ComponentProps<typeof Dialog>) {
   return (
     <Dialog {...props}>
-      <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
-      <DialogContent
-        className={cn("overflow-hidden p-0", className)}
-        showCloseButton={showCloseButton}
-      >
-        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+      <DialogContent className="overflow-hidden p-0">
+        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
           {children}
         </Command>
       </DialogContent>
@@ -60,6 +54,13 @@ function CommandDialog({
   )
 }
 
+/**
+ * Input field for the Command palette.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Command Input.
+ */
 function CommandInput({
   className,
   ...props
@@ -67,9 +68,10 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex h-9 items-center gap-2 border-b px-3"
+      className="flex h-9 items-center border-b px-3"
+      cmdk-input-wrapper=""
     >
-      <Search className="size-4 shrink-0 opacity-50" />
+      <Search className="mr-2 size-4 shrink-0 opacity-50" />
       <CommandPrimitive.Input
         data-slot="command-input"
         className={cn(
@@ -82,6 +84,13 @@ function CommandInput({
   )
 }
 
+/**
+ * List container for Command items.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Command List.
+ */
 function CommandList({
   className,
   ...props
@@ -90,7 +99,7 @@ function CommandList({
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        "max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto",
+        "max-h-[300px] overflow-y-auto overflow-x-hidden",
         className
       )}
       {...props}
@@ -98,6 +107,12 @@ function CommandList({
   )
 }
 
+/**
+ * Component displayed when no items match the search.
+ *
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} The rendered Empty state.
+ */
 function CommandEmpty({
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
@@ -110,6 +125,13 @@ function CommandEmpty({
   )
 }
 
+/**
+ * Group of Command items.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Command Group.
+ */
 function CommandGroup({
   className,
   ...props
@@ -126,6 +148,13 @@ function CommandGroup({
   )
 }
 
+/**
+ * Separator between Command items or groups.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Separator.
+ */
 function CommandSeparator({
   className,
   ...props
@@ -139,6 +168,13 @@ function CommandSeparator({
   )
 }
 
+/**
+ * Individual Command item.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Command Item.
+ */
 function CommandItem({
   className,
   ...props
@@ -155,6 +191,13 @@ function CommandItem({
   )
 }
 
+/**
+ * Keyboard shortcut indicator for a Command item.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Shortcut.
+ */
 function CommandShortcut({
   className,
   ...props

@@ -6,12 +6,24 @@ import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Root Context Menu component.
+ *
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} The rendered Context Menu.
+ */
 function ContextMenu({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Root>) {
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />
 }
 
+/**
+ * Trigger area for the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} The rendered Trigger.
+ */
 function ContextMenuTrigger({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) {
@@ -20,6 +32,12 @@ function ContextMenuTrigger({
   )
 }
 
+/**
+ * Group of items within the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} The rendered Group.
+ */
 function ContextMenuGroup({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Group>) {
@@ -28,6 +46,12 @@ function ContextMenuGroup({
   )
 }
 
+/**
+ * Portal for the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} The rendered Portal.
+ */
 function ContextMenuPortal({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Portal>) {
@@ -36,12 +60,24 @@ function ContextMenuPortal({
   )
 }
 
+/**
+ * Submenu for the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} The rendered Submenu.
+ */
 function ContextMenuSub({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Sub>) {
   return <ContextMenuPrimitive.Sub data-slot="context-menu-sub" {...props} />
 }
 
+/**
+ * Radio group within the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} The rendered Radio Group.
+ */
 function ContextMenuRadioGroup({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.RadioGroup>) {
@@ -53,6 +89,15 @@ function ContextMenuRadioGroup({
   )
 }
 
+/**
+ * Trigger for a Submenu.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {boolean} props.inset - Whether to inset the trigger.
+ * @param {React.ReactNode} props.children - Child components.
+ * @returns {JSX.Element} The rendered Submenu Trigger.
+ */
 function ContextMenuSubTrigger({
   className,
   inset,
@@ -77,6 +122,13 @@ function ContextMenuSubTrigger({
   )
 }
 
+/**
+ * Content of a Submenu.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Submenu Content.
+ */
 function ContextMenuSubContent({
   className,
   ...props
@@ -93,6 +145,13 @@ function ContextMenuSubContent({
   )
 }
 
+/**
+ * Content of the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Content.
+ */
 function ContextMenuContent({
   className,
   ...props
@@ -111,6 +170,15 @@ function ContextMenuContent({
   )
 }
 
+/**
+ * Individual item in the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {boolean} props.inset - Whether to inset the item.
+ * @param {string} props.variant - Variant of the item (default/destructive).
+ * @returns {JSX.Element} The rendered Item.
+ */
 function ContextMenuItem({
   className,
   inset,
@@ -134,6 +202,15 @@ function ContextMenuItem({
   )
 }
 
+/**
+ * Checkbox item in the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {React.ReactNode} props.children - Child components.
+ * @param {boolean} props.checked - Whether the checkbox is checked.
+ * @returns {JSX.Element} The rendered Checkbox Item.
+ */
 function ContextMenuCheckboxItem({
   className,
   children,
@@ -160,6 +237,14 @@ function ContextMenuCheckboxItem({
   )
 }
 
+/**
+ * Radio item in the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {React.ReactNode} props.children - Child components.
+ * @returns {JSX.Element} The rendered Radio Item.
+ */
 function ContextMenuRadioItem({
   className,
   children,
@@ -184,6 +269,14 @@ function ContextMenuRadioItem({
   )
 }
 
+/**
+ * Label for a group of items in the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {boolean} props.inset - Whether to inset the label.
+ * @returns {JSX.Element} The rendered Label.
+ */
 function ContextMenuLabel({
   className,
   inset,
@@ -204,6 +297,13 @@ function ContextMenuLabel({
   )
 }
 
+/**
+ * Separator for the Context Menu.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Separator.
+ */
 function ContextMenuSeparator({
   className,
   ...props
@@ -217,6 +317,13 @@ function ContextMenuSeparator({
   )
 }
 
+/**
+ * Keyboard shortcut indicator for a Context Menu item.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Shortcut.
+ */
 function ContextMenuShortcut({
   className,
   ...props

@@ -10,6 +10,11 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 
+/**
+ * Toaster component that manages and renders toasts.
+ *
+ * @returns {JSX.Element} The rendered Toaster.
+ */
 export function Toaster() {
   const { toasts } = useToast()
 

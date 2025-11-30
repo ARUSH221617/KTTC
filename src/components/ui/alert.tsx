@@ -19,6 +19,14 @@ const alertVariants = cva(
   }
 )
 
+/**
+ * Alert component to display messages.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {string} props.variant - The visual variant of the alert.
+ * @returns {JSX.Element} The rendered Alert.
+ */
 function Alert({
   className,
   variant,
@@ -34,6 +42,13 @@ function Alert({
   )
 }
 
+/**
+ * Title for the Alert.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Alert Title.
+ */
 function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -47,6 +62,13 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Description for the Alert.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Alert Description.
+ */
 function AlertDescription({
   className,
   ...props

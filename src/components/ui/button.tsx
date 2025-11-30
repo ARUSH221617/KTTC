@@ -35,6 +35,16 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * Standard button component.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {string} props.variant - The visual style of the button.
+ * @param {string} props.size - The size of the button.
+ * @param {boolean} props.asChild - Whether to render as a child component.
+ * @returns {JSX.Element} The rendered Button.
+ */
 function Button({
   className,
   variant,

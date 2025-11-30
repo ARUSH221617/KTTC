@@ -23,7 +23,7 @@ type CarouselProps = {
 
 type CarouselContextProps = {
   carouselRef: ReturnType<typeof useEmblaCarousel>[0]
-  api: ReturnType<typeof useEmblaCarousel>[1]
+  api: CarouselApi
   scrollPrev: () => void
   scrollNext: () => void
   canScrollPrev: boolean
@@ -32,6 +32,12 @@ type CarouselContextProps = {
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
 
+/**
+ * Hook to access the Carousel context.
+ *
+ * @returns {CarouselContextProps} The carousel context values.
+ * @throws {Error} If used outside a Carousel component.
+ */
 function useCarousel() {
   const context = React.useContext(CarouselContext)
 
@@ -42,6 +48,18 @@ function useCarousel() {
   return context
 }
 
+/**
+ * Root Carousel component wrapping Embla Carousel.
+ *
+ * @param {object} props - The component props.
+ * @param {CarouselOptions} props.opts - Embla carousel options.
+ * @param {CarouselPlugin} props.plugins - Embla carousel plugins.
+ * @param {string} props.orientation - The orientation of the carousel (horizontal/vertical).
+ * @param {function} props.setApi - Callback to get the carousel API instance.
+ * @param {string} props.className - Additional class names.
+ * @param {React.ReactNode} props.children - Child components.
+ * @returns {JSX.Element} The rendered Carousel.
+ */
 function Carousel({
   orientation = "horizontal",
   opts,
@@ -62,7 +80,10 @@ function Carousel({
   const [canScrollNext, setCanScrollNext] = React.useState(false)
 
   const onSelect = React.useCallback((api: CarouselApi) => {
-    if (!api) return
+    if (!api) {
+      return
+    }
+
     setCanScrollPrev(api.canScrollPrev())
     setCanScrollNext(api.canScrollNext())
   }, [])
@@ -89,12 +110,18 @@ function Carousel({
   )
 
   React.useEffect(() => {
-    if (!api || !setApi) return
+    if (!api || !setApi) {
+      return
+    }
+
     setApi(api)
   }, [api, setApi])
 
   React.useEffect(() => {
-    if (!api) return
+    if (!api) {
+      return
+    }
+
     onSelect(api)
     api.on("reInit", onSelect)
     api.on("select", onSelect)
@@ -119,11 +146,10 @@ function Carousel({
       }}
     >
       <div
-        onKeyDownCapture={handleKeyDown}
+        onKeyDown={handleKeyDown}
         className={cn("relative", className)}
         role="region"
         aria-roledescription="carousel"
-        data-slot="carousel"
         {...props}
       >
         {children}
@@ -132,15 +158,18 @@ function Carousel({
   )
 }
 
+/**
+ * Container for carousel slides.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Carousel Content.
+ */
 function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   const { carouselRef, orientation } = useCarousel()
 
   return (
-    <div
-      ref={carouselRef}
-      className="overflow-hidden"
-      data-slot="carousel-content"
-    >
+    <div ref={carouselRef} className="overflow-hidden" data-slot="carousel-content">
       <div
         className={cn(
           "flex",
@@ -153,6 +182,13 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Individual slide in the carousel.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @returns {JSX.Element} The rendered Carousel Item.
+ */
 function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel()
 
@@ -171,6 +207,15 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Button to scroll to the previous slide.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {string} props.variant - Button variant.
+ * @param {string} props.size - Button size.
+ * @returns {JSX.Element} The rendered Previous Button.
+ */
 function CarouselPrevious({
   className,
   variant = "outline",
@@ -187,7 +232,7 @@ function CarouselPrevious({
       className={cn(
         "absolute size-8 rounded-full",
         orientation === "horizontal"
-          ? "top-1/2 -left-12 -translate-y-1/2"
+          ? "-left-12 top-1/2 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
@@ -201,6 +246,15 @@ function CarouselPrevious({
   )
 }
 
+/**
+ * Button to scroll to the next slide.
+ *
+ * @param {object} props - The component props.
+ * @param {string} props.className - Additional class names.
+ * @param {string} props.variant - Button variant.
+ * @param {string} props.size - Button size.
+ * @returns {JSX.Element} The rendered Next Button.
+ */
 function CarouselNext({
   className,
   variant = "outline",
@@ -217,7 +271,7 @@ function CarouselNext({
       className={cn(
         "absolute size-8 rounded-full",
         orientation === "horizontal"
-          ? "top-1/2 -right-12 -translate-y-1/2"
+          ? "-right-12 top-1/2 -translate-y-1/2"
           : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}

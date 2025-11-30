@@ -8,6 +8,10 @@ const globalForPrisma = globalThis as unknown as {
 const isDevelopment = process.env.NODE_ENV === 'development'
 const databaseUrl = process.env.DATABASE_URL || (isDevelopment ? 'file:./dev.db' : '')
 
+/**
+ * The Prisma Client instance for database interactions.
+ * In non-production environments, it reuses the existing connection to prevent multiple instances.
+ */
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
