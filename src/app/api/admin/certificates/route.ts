@@ -25,8 +25,8 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
     const certificates = await db.certificate.findMany({
       where: {
         OR: [
-          { userId: { contains: search, mode: 'insensitive' } },
-          { courseId: { contains: search, mode: 'insensitive' } },
+          { userId: { contains: search } },
+          { courseId: { contains: search } },
         ],
       },
       skip,
@@ -42,8 +42,8 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
     const totalCount = await db.certificate.count({
       where: {
         OR: [
-          { userId: { contains: search, mode: 'insensitive' } },
-          { courseId: { contains: search, mode: 'insensitive' } },
+          { userId: { contains: search } },
+          { courseId: { contains: search } },
         ],
       },
     });
