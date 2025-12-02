@@ -2,11 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { DataTable } from '@/components/admin/data-table';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { User as UserIcon, Plus } from 'lucide-react';
 import { getUsersColumns } from './users-table';
 import { User } from '@/types';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 
 export default function UsersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -74,10 +82,7 @@ export default function UsersPage() {
 
       if (response.ok) {
         toast.success(`User ${editingUser ? 'updated' : 'created'} successfully`);
-        setShowAddModal(false);
-        setEditingUser(null);
-        setFormData({ name: '', email: '', role: 'user' });
-        setFormErrors({});
+        handleOpenChange(false);
       } else {
         toast.error(result.error || `Failed to ${editingUser ? 'update' : 'create'} user`);
       }
@@ -125,6 +130,15 @@ export default function UsersPage() {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setShowAddModal(open);
+    if (!open) {
+      setEditingUser(null);
+      setFormData({ name: '', email: '', role: 'user' });
+      setFormErrors({});
+    }
+  };
+
   const columns = getUsersColumns(handleEditUser, handleDeleteUser);
 
   return (
@@ -140,79 +154,79 @@ export default function UsersPage() {
         searchPlaceholder="Search users..."
       />
 
-      {/* Add/Edit User Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center gap-2 mb-4">
+      <Sheet open={showAddModal} onOpenChange={handleOpenChange}>
+        <SheetContent className="flex flex-col h-full sm:max-w-lg w-full">
+          <SheetHeader>
+            <div className="flex items-center gap-2">
               <UserIcon className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">
+              <SheetTitle>
                 {editingUser ? 'Edit User' : 'Add New User'}
-              </h3>
+              </SheetTitle>
             </div>
+            <SheetDescription>
+              {editingUser ? 'Update the user details below.' : 'Fill in the details to create a new user.'}
+            </SheetDescription>
+          </SheetHeader>
 
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className={`w-full p-2 border rounded ${formErrors.name ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Enter user name"
-                  />
-                  {formErrors.name && <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className={`w-full p-2 border rounded ${formErrors.email ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Enter user email"
-                  />
-                  {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Role</label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded"
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
+          <div className="flex-1 overflow-y-auto py-4 px-1">
+            <form id="user-form" onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className={`w-full p-2 border rounded ${formErrors.name ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="Enter user name"
+                />
+                {formErrors.name && <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>}
               </div>
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setEditingUser(null);
-                    setFormData({ name: '', email: '', role: 'user' });
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className={`w-full p-2 border rounded ${formErrors.email ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="Enter user email"
+                />
+                {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Role</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  {editingUser ? 'Update' : 'Create'}
-                </button>
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
               </div>
             </form>
           </div>
-        </div>
-      )}
+
+          <SheetFooter>
+            <div className="flex justify-end gap-2 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="user-form"
+              >
+                {editingUser ? 'Update' : 'Create'}
+              </Button>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

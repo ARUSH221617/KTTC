@@ -8,6 +8,15 @@ import { getCoursesColumns, CourseWithInstructor } from './courses-table';
 import ImageUpload from '@/components/ui/image-upload';
 import { InstructorSelect } from '@/components/ui/instructor-select';
 import Editor from '@/components/ui/editor';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 
 interface User {
   id: string;
@@ -32,15 +41,9 @@ export default function CoursesPage() {
   useEffect(() => {
     const fetchInstructors = async () => {
       try {
-        // Fetch all users with role 'instructor' or 'admin'
-        // For now just fetching all users and filtering might be needed depending on API
-        // Assuming /api/admin/users supports filtering or returns all
-        // The original code had ?role=admin but we probably want instructors
         const response = await fetch('/api/admin/users');
         if (response.ok) {
           const data = await response.json();
-          // Filter for users who can be instructors if API returns all
-          // or just use what is returned if API handles filtering
           setInstructors(data.users || []);
         }
       } catch (error) {
@@ -116,17 +119,7 @@ export default function CoursesPage() {
 
       if (response.ok) {
         toast.success(`Course ${editingCourse ? 'updated' : 'created'} successfully`);
-        setShowAddModal(false);
-        setEditingCourse(null);
-        setFormData({
-          title: '',
-          description: '',
-          instructorId: '',
-          price: '',
-          duration: '',
-          thumbnail: ''
-        });
-        setFormErrors({});
+        handleOpenChange(false);
       } else {
         toast.error(result.error || `Failed to ${editingCourse ? 'update' : 'create'} course`);
       }
@@ -184,6 +177,22 @@ export default function CoursesPage() {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setShowAddModal(open);
+    if (!open) {
+      setEditingCourse(null);
+      setFormData({
+        title: '',
+        description: '',
+        instructorId: '',
+        price: '',
+        duration: '',
+        thumbnail: ''
+      });
+      setFormErrors({});
+    }
+  };
+
   const columns = getCoursesColumns(handleEditCourse, handleDeleteCourse);
 
   return (
@@ -199,119 +208,113 @@ export default function CoursesPage() {
         searchPlaceholder="Search courses..."
       />
 
-      {/* Add/Edit Course Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center gap-2 mb-4">
+      <Sheet open={showAddModal} onOpenChange={handleOpenChange}>
+        <SheetContent className="flex flex-col h-full sm:max-w-lg w-full">
+          <SheetHeader>
+            <div className="flex items-center gap-2">
               <GraduationCap className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">
+              <SheetTitle>
                 {editingCourse ? 'Edit Course' : 'Add New Course'}
-              </h3>
+              </SheetTitle>
             </div>
+            <SheetDescription>
+              {editingCourse ? 'Update the course details below.' : 'Fill in the details to create a new course.'}
+            </SheetDescription>
+          </SheetHeader>
 
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Title</label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    className={`w-full p-2 border rounded ${formErrors.title ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Enter course title"
-                  />
-                  {formErrors.title && <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>}
-                </div>
+          <div className="flex-1 overflow-y-auto py-4 px-1">
+            <form id="course-form" onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className={`w-full p-2 border rounded ${formErrors.title ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="Enter course title"
+                />
+                {formErrors.title && <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>}
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <div className="max-h-60 overflow-y-auto">
-                    <Editor
-                      value={formData.description}
-                      onChange={(value) => setFormData({ ...formData, description: value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Instructor</label>
-                  <InstructorSelect
-                    value={formData.instructorId}
-                    onChange={(value) => setFormData({...formData, instructorId: value})}
-                    instructors={instructors}
-                    error={formErrors.instructorId}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Price</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <input
-                        type="number"
-                        value={formData.price}
-                        onChange={(e) => setFormData({...formData, price: e.target.value})}
-                        className="w-full p-2 pl-8 border border-gray-300 rounded"
-                        placeholder="0.00"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
-                    <input
-                      type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded"
-                      placeholder="e.g., 60"
-                      min="0"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Thumbnail</label>
-                  <ImageUpload
-                    value={formData.thumbnail}
-                    onChange={(url) => setFormData({...formData, thumbnail: url})}
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <div className="min-h-[200px] border rounded-md">
+                  <Editor
+                    value={formData.description}
+                    onChange={(value) => setFormData({ ...formData, description: value })}
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setEditingCourse(null);
-                    setFormData({
-                      title: '',
-                      description: '',
-                      instructorId: '',
-                      price: '',
-                      duration: '',
-                      thumbnail: ''
-                    });
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  {editingCourse ? 'Update' : 'Create'}
-                </button>
+              <div>
+                <label className="block text-sm font-medium mb-1">Instructor</label>
+                <InstructorSelect
+                  value={formData.instructorId}
+                  onChange={(value) => setFormData({...formData, instructorId: value})}
+                  instructors={instructors}
+                  error={formErrors.instructorId}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Price</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <input
+                      type="number"
+                      value={formData.price}
+                      onChange={(e) => setFormData({...formData, price: e.target.value})}
+                      className="w-full p-2 pl-8 border border-gray-300 rounded"
+                      placeholder="0.00"
+                      step="0.01"
+                    />
+                  </div>
+                  {formErrors.price && <p className="text-red-500 text-sm mt-1">{formErrors.price}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+                  <input
+                    type="number"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholder="e.g., 60"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Thumbnail</label>
+                <ImageUpload
+                  value={formData.thumbnail}
+                  onChange={(url) => setFormData({...formData, thumbnail: url})}
+                />
               </div>
             </form>
           </div>
-        </div>
-      )}
+
+          <SheetFooter>
+            <div className="flex justify-end gap-2 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="course-form"
+              >
+                {editingCourse ? 'Update' : 'Create'}
+              </Button>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
