@@ -5,6 +5,15 @@ import { DataTable } from '@/components/admin/data-table';
 import { toast } from 'sonner';
 import { Award, Calendar, Plus } from 'lucide-react';
 import { getCertificatesColumns, CertificateWithRelations } from './certificates-table';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 
 interface User {
   id: string;
@@ -115,14 +124,7 @@ export default function CertificatesPage() {
 
       if (response.ok) {
         toast.success(`Certificate ${editingCertificate ? 'updated' : 'created'} successfully`);
-        setShowAddModal(false);
-        setEditingCertificate(null);
-        setFormData({
-          userId: '',
-          courseId: '',
-          issuedDate: ''
-        });
-        setFormErrors({});
+        handleOpenChange(false);
       } else {
         toast.error(result.error || `Failed to ${editingCertificate ? 'update' : 'create'} certificate`);
       }
@@ -174,6 +176,19 @@ export default function CertificatesPage() {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setShowAddModal(open);
+    if (!open) {
+      setEditingCertificate(null);
+      setFormData({
+        userId: '',
+        courseId: '',
+        issuedDate: ''
+      });
+      setFormErrors({});
+    }
+  };
+
   const columns = getCertificatesColumns(handleEditCertificate, handleDeleteCertificate);
 
   return (
@@ -189,98 +204,94 @@ export default function CertificatesPage() {
         searchPlaceholder="Search certificates..."
       />
 
-      {/* Add/Edit Certificate Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center gap-2 mb-4">
+      <Sheet open={showAddModal} onOpenChange={handleOpenChange}>
+        <SheetContent className="flex flex-col h-full sm:max-w-lg w-full">
+          <SheetHeader>
+            <div className="flex items-center gap-2">
               <Award className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">
+              <SheetTitle>
                 {editingCertificate ? 'Edit Certificate' : 'Issue New Certificate'}
-              </h3>
+              </SheetTitle>
             </div>
+            <SheetDescription>
+              {editingCertificate ? 'Update the certificate details below.' : 'Fill in the details to issue a new certificate.'}
+            </SheetDescription>
+          </SheetHeader>
 
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                {!editingCertificate && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">User</label>
-                      <select
-                        value={formData.userId}
-                        onChange={(e) => setFormData({...formData, userId: e.target.value})}
-                        className={`w-full p-2 border rounded ${formErrors.userId ? 'border-red-500' : 'border-gray-300'}`}
-                      >
-                        <option value="">Select User</option>
-                        {users.map((user) => (
-                          <option key={user.id} value={user.id}>
-                            {user.name} ({user.email})
-                          </option>
-                        ))}
-                      </select>
-                      {formErrors.userId && <p className="text-red-500 text-sm mt-1">{formErrors.userId}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Course</label>
-                      <select
-                        value={formData.courseId}
-                        onChange={(e) => setFormData({...formData, courseId: e.target.value})}
-                        className={`w-full p-2 border rounded ${formErrors.courseId ? 'border-red-500' : 'border-gray-300'}`}
-                      >
-                        <option value="">Select Course</option>
-                        {courses.map((course) => (
-                          <option key={course.id} value={course.id}>
-                            {course.title}
-                          </option>
-                        ))}
-                      </select>
-                      {formErrors.courseId && <p className="text-red-500 text-sm mt-1">{formErrors.courseId}</p>}
-                    </div>
-                  </>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Issued Date</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
-                      type="date"
-                      value={formData.issuedDate}
-                      onChange={(e) => setFormData({...formData, issuedDate: e.target.value})}
-                      className="w-full p-2 pl-8 border border-gray-300 rounded"
-                    />
+          <div className="flex-1 overflow-y-auto py-4 px-1">
+            <form id="certificate-form" onSubmit={handleSubmit} className="space-y-4">
+              {!editingCertificate && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">User</label>
+                    <select
+                      value={formData.userId}
+                      onChange={(e) => setFormData({...formData, userId: e.target.value})}
+                      className={`w-full p-2 border rounded ${formErrors.userId ? 'border-red-500' : 'border-gray-300'}`}
+                    >
+                      <option value="">Select User</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name} ({user.email})
+                        </option>
+                      ))}
+                    </select>
+                    {formErrors.userId && <p className="text-red-500 text-sm mt-1">{formErrors.userId}</p>}
                   </div>
-                </div>
-              </div>
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setEditingCertificate(null);
-                    setFormData({
-                      userId: '',
-                      courseId: '',
-                      issuedDate: ''
-                    });
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  {editingCertificate ? 'Update' : 'Issue'}
-                </button>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Course</label>
+                    <select
+                      value={formData.courseId}
+                      onChange={(e) => setFormData({...formData, courseId: e.target.value})}
+                      className={`w-full p-2 border rounded ${formErrors.courseId ? 'border-red-500' : 'border-gray-300'}`}
+                    >
+                      <option value="">Select Course</option>
+                      {courses.map((course) => (
+                        <option key={course.id} value={course.id}>
+                          {course.title}
+                        </option>
+                      ))}
+                    </select>
+                    {formErrors.courseId && <p className="text-red-500 text-sm mt-1">{formErrors.courseId}</p>}
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Issued Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <input
+                    type="date"
+                    value={formData.issuedDate}
+                    onChange={(e) => setFormData({...formData, issuedDate: e.target.value})}
+                    className="w-full p-2 pl-8 border border-gray-300 rounded"
+                  />
+                </div>
               </div>
             </form>
           </div>
-        </div>
-      )}
+
+          <SheetFooter>
+            <div className="flex justify-end gap-2 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="certificate-form"
+              >
+                {editingCertificate ? 'Update' : 'Issue'}
+              </Button>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
