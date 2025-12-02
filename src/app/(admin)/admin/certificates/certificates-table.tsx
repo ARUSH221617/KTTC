@@ -15,7 +15,7 @@ import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import React from "react";
 
 // Define an extended Certificate type for API response that includes user and course objects
-interface CertificateWithRelations extends Omit<Certificate, 'holderName' | 'courseId' | 'issueDate'> {
+export interface CertificateWithRelations extends Omit<Certificate, 'holderName' | 'courseId' | 'issueDate'> {
   holderName?: string; // This might come from the certificate or from the user relation
   user: {
     id: string;

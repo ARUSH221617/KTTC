@@ -27,6 +27,7 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
         OR: [
           { userId: { contains: search } },
           { courseId: { contains: search } },
+          { certificateNo: { contains: search } },
         ],
       },
       skip,
@@ -44,6 +45,7 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
         OR: [
           { userId: { contains: search } },
           { courseId: { contains: search } },
+          { certificateNo: { contains: search } },
         ],
       },
     });
@@ -81,7 +83,7 @@ export async function POST(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { userId, courseId, issuedDate } = body;
+    const { userId, courseId, issuedDate, certificateNo } = body;
 
     // Validate required fields
     if (!userId || !courseId) {
@@ -97,6 +99,7 @@ export async function POST(request: any, response: any) {
         userId,
         courseId,
         issuedDate: issuedDate ? new Date(issuedDate) : new Date(),
+        certificateNo: certificateNo || undefined,
       },
     });
 
@@ -125,7 +128,7 @@ export async function PUT(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { id, issuedDate } = body;
+    const { id, issuedDate, certificateNo } = body;
 
     if (!id) {
       return new Response(JSON.stringify({ error: 'Certificate ID is required' }), {
@@ -139,6 +142,7 @@ export async function PUT(request: any, response: any) {
       where: { id },
       data: {
         issuedDate: issuedDate ? new Date(issuedDate) : undefined,
+        certificateNo: certificateNo !== undefined ? certificateNo : undefined,
       },
     });
 
