@@ -86,45 +86,7 @@ export function getUsersColumns(onEdit?: (user: User) => void, onDelete?: (user:
     }
   ];
 
-  // Add actions column if callbacks are provided
-  if (onDelete || onEdit) {
-    return [
-      ...baseColumns,
-      {
-        key: 'actions',
-        title: 'Actions',
-        render: (user: User) => {
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {onEdit && (
-                  <DropdownMenuItem onClick={() => onEdit(user)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                )}
-                {onDelete && (
-                  <DropdownMenuItem
-                    onClick={() => onDelete(user)}
-                    className="text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        }
-      }
-    ];
-  }
-
+  // No need to add actions column manually as DataTable component handles it
   return baseColumns;
 }
 
