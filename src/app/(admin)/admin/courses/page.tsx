@@ -223,7 +223,7 @@ export default function CoursesPage() {
       />
 
       <Sheet open={showAddModal} onOpenChange={handleOpenChange}>
-        <SheetContent className="flex flex-col h-full sm:max-w-lg w-full">
+        <SheetContent className="flex flex-col h-full sm:max-w-4xl w-full">
           <SheetHeader>
             <div className="flex items-center gap-2">
               <GraduationCap className="h-5 w-5" />
