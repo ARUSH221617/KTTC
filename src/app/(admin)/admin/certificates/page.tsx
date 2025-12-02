@@ -30,6 +30,7 @@ export default function CertificatesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCertificate, setEditingCertificate] = useState<CertificateWithRelations | null>(null);
   const [formData, setFormData] = useState({
+    certificateNo: '',
     userId: '',
     courseId: '',
     issuedDate: ''
@@ -106,9 +107,11 @@ export default function CertificatesPage() {
       const bodyData = editingCertificate
         ? {
             id: editingCertificate.id,
+            certificateNo: formData.certificateNo,
             issuedDate: formData.issuedDate || new Date().toISOString()
           }
         : {
+            certificateNo: formData.certificateNo,
             userId: formData.userId,
             courseId: formData.courseId,
             issuedDate: formData.issuedDate || new Date().toISOString()
@@ -137,6 +140,7 @@ export default function CertificatesPage() {
   const handleAddCertificate = () => {
     setEditingCertificate(null);
     setFormData({
+      certificateNo: '',
       userId: '',
       courseId: '',
       issuedDate: ''
@@ -148,6 +152,7 @@ export default function CertificatesPage() {
   const handleEditCertificate = (certificate: CertificateWithRelations) => {
     setEditingCertificate(certificate);
     setFormData({
+      certificateNo: certificate.certificateNo || '',
       userId: certificate.user.id,
       courseId: certificate.course.id,
       issuedDate: certificate.issuedDate
@@ -181,6 +186,7 @@ export default function CertificatesPage() {
     if (!open) {
       setEditingCertificate(null);
       setFormData({
+        certificateNo: '',
         userId: '',
         courseId: '',
         issuedDate: ''
@@ -220,6 +226,17 @@ export default function CertificatesPage() {
 
           <div className="flex-1 overflow-y-auto py-4 px-1">
             <form id="certificate-form" onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Certificate No (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.certificateNo}
+                  onChange={(e) => setFormData({...formData, certificateNo: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="Enter certificate number"
+                />
+              </div>
+
               {!editingCertificate && (
                 <>
                   <div>
