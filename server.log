@@ -1,3 +1,0 @@
-
-> KTTC@0.1.1 dev
-> cross-env NODE_ENV=development next dev -p 3000 2>&1 | tee dev.log

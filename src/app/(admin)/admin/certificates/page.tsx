@@ -33,7 +33,7 @@ export default function CertificatesPage() {
     certificateNo: '',
     userId: '',
     courseId: '',
-    issuedDate: ''
+    status: 'valid'
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [users, setUsers] = useState<User[]>([]);
@@ -108,13 +108,13 @@ export default function CertificatesPage() {
         ? {
             id: editingCertificate.id,
             certificateNo: formData.certificateNo,
-            issuedDate: formData.issuedDate || new Date().toISOString()
+            status: formData.status
           }
         : {
             certificateNo: formData.certificateNo,
             userId: formData.userId,
             courseId: formData.courseId,
-            issuedDate: formData.issuedDate || new Date().toISOString()
+            status: formData.status
           };
 
       const response = await fetch(url, {
@@ -143,7 +143,7 @@ export default function CertificatesPage() {
       certificateNo: '',
       userId: '',
       courseId: '',
-      issuedDate: ''
+      status: 'valid'
     });
     setFormErrors({});
     setShowAddModal(true);
@@ -155,7 +155,7 @@ export default function CertificatesPage() {
       certificateNo: certificate.certificateNo || '',
       userId: certificate.user.id,
       courseId: certificate.course.id,
-      issuedDate: certificate.issuedDate
+      status: certificate.status || 'valid'
     });
     setShowAddModal(true);
   };
@@ -189,7 +189,7 @@ export default function CertificatesPage() {
         certificateNo: '',
         userId: '',
         courseId: '',
-        issuedDate: ''
+        status: 'valid'
       });
       setFormErrors({});
     }
@@ -276,15 +276,28 @@ export default function CertificatesPage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-1">Issued Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type="date"
-                    value={formData.issuedDate}
-                    onChange={(e) => setFormData({...formData, issuedDate: e.target.value})}
-                    className="w-full p-2 pl-8 border border-gray-300 rounded"
-                  />
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="valid"
+                      checked={formData.status === 'valid'}
+                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    />
+                    Valid
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="invalid"
+                      checked={formData.status === 'invalid'}
+                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    />
+                    Invalid
+                  </label>
                 </div>
               </div>
             </form>
