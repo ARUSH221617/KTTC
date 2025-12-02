@@ -11,10 +11,58 @@ async function main() {
     data: {
       email: 'arush221617@gmail.com',
       password: hashedPassword,
+      name: 'Arush Admin',
+      role: 'admin'
     },
   });
 
   console.log('Created user:', user);
+
+  // Create instructors
+  const instructor1 = await db.user.create({
+    data: {
+      email: 'sarah.johnson@example.com',
+      password: hashedPassword,
+      name: 'Dr. Sarah Johnson',
+      role: 'instructor'
+    }
+  });
+
+  const instructor2 = await db.user.create({
+    data: {
+      email: 'michael.chen@example.com',
+      password: hashedPassword,
+      name: 'Prof. Michael Chen',
+      role: 'instructor'
+    }
+  });
+
+  const instructor3 = await db.user.create({
+    data: {
+      email: 'emily.rodriguez@example.com',
+      password: hashedPassword,
+      name: 'Ms. Emily Rodriguez',
+      role: 'instructor'
+    }
+  });
+
+  const instructor4 = await db.user.create({
+    data: {
+      email: 'james.wilson@example.com',
+      password: hashedPassword,
+      name: 'Dr. James Wilson',
+      role: 'instructor'
+    }
+  });
+
+  const instructor5 = await db.user.create({
+    data: {
+      email: 'maria.garcia@example.com',
+      password: hashedPassword,
+      name: 'Prof. Maria Garcia',
+      role: 'instructor'
+    }
+  });
 
   // Create sample courses
   const courses = await Promise.all([
@@ -25,7 +73,7 @@ async function main() {
         category: 'Teaching Skills',
         level: 'Intermediate',
         duration: '6 weeks',
-        instructor: 'Dr. Sarah Johnson',
+        instructorId: instructor1.id,
         thumbnail: '/api/placeholder/300/200',
       },
     }),
@@ -36,7 +84,7 @@ async function main() {
         category: 'Psychology',
         level: 'Advanced',
         duration: '8 weeks',
-        instructor: 'Prof. Michael Chen',
+        instructorId: instructor2.id,
         thumbnail: '/api/placeholder/300/200',
       },
     }),
@@ -47,7 +95,7 @@ async function main() {
         category: 'Management',
         level: 'Beginner',
         duration: '4 weeks',
-        instructor: 'Ms. Emily Rodriguez',
+        instructorId: instructor3.id,
         thumbnail: '/api/placeholder/300/200',
       },
     }),
@@ -58,7 +106,7 @@ async function main() {
         category: 'Technology',
         level: 'Intermediate',
         duration: '5 weeks',
-        instructor: 'Dr. James Wilson',
+        instructorId: instructor4.id,
         thumbnail: '/api/placeholder/300/200',
       },
     }),
@@ -69,7 +117,7 @@ async function main() {
         category: 'Curriculum',
         level: 'Advanced',
         duration: '10 weeks',
-        instructor: 'Prof. Maria Garcia',
+        instructorId: instructor5.id,
         thumbnail: '/api/placeholder/300/200',
       },
     }),
@@ -77,24 +125,41 @@ async function main() {
 
   console.log('Created courses:', courses);
 
+  // Create users for certificates
+  const student1 = await db.user.create({
+    data: {
+      email: 'fatemeh.alavi@example.com',
+      password: hashedPassword,
+      name: 'Fatemeh Alavi',
+      role: 'user'
+    }
+  });
+
+  const student2 = await db.user.create({
+    data: {
+      email: 'reza.mohammadi@example.com',
+      password: hashedPassword,
+      name: 'Reza Mohammadi',
+      role: 'user'
+    }
+  });
+
   // Create sample certificates
   const certificates = await Promise.all([
     db.certificate.create({
       data: {
         certificateNo: 'KTTC-2024-0001',
-        holderName: 'Fatemeh Alavi',
+        userId: student1.id,
         courseId: courses[0].id,
-        issueDate: new Date('2024-03-15'),
-        isValid: true,
+        issuedDate: new Date('2024-03-15'),
       },
     }),
     db.certificate.create({
       data: {
         certificateNo: 'KTTC-2024-0002',
-        holderName: 'Reza Mohammadi',
+        userId: student2.id,
         courseId: courses[4].id,
-        issueDate: new Date('2024-02-20'),
-        isValid: true,
+        issuedDate: new Date('2024-02-20'),
       },
     }),
   ]);

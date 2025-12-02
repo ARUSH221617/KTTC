@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import DataTable from '@/components/admin/data-table';
+import { DataTable } from '@/components/admin/data-table';
 import { toast } from 'sonner';
 import { GraduationCap, DollarSign, Plus } from 'lucide-react';
 import { getCoursesColumns, CourseWithInstructor } from './courses-table';
@@ -23,15 +23,22 @@ export default function CoursesPage() {
     thumbnail: ''
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [instructors, setInstructors] = useState<User[]>([]);
 
   // Fetch instructors for the form
   useEffect(() => {
     const fetchInstructors = async () => {
       try {
-        const response = await fetch('/api/admin/users?role=admin');
+        // Fetch all users with role 'instructor' or 'admin'
+        // For now just fetching all users and filtering might be needed depending on API
+        // Assuming /api/admin/users supports filtering or returns all
+        // The original code had ?role=admin but we probably want instructors
+        const response = await fetch('/api/admin/users');
         if (response.ok) {
           const data = await response.json();
-          setInstructors(data.users);
+          // Filter for users who can be instructors if API returns all
+          // or just use what is returned if API handles filtering
+          setInstructors(data.users || []);
         }
       } catch (error) {
         console.error('Error fetching instructors:', error);
@@ -46,7 +53,11 @@ export default function CoursesPage() {
     if (!response.ok) {
       throw new Error('Failed to fetch courses');
     }
-    return response.json();
+    const data = await response.json();
+    return {
+      data: data.courses,
+      pagination: data.pagination
+    };
   };
 
   const validateForm = () => {

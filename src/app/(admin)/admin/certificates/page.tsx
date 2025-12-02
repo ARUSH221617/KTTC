@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import DataTable from '@/components/admin/data-table';
+import { DataTable } from '@/components/admin/data-table';
 import { toast } from 'sonner';
 import { Award, Calendar, Plus } from 'lucide-react';
 import { getCertificatesColumns, CertificateWithRelations } from './certificates-table';
@@ -26,6 +26,8 @@ export default function CertificatesPage() {
     issuedDate: ''
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [users, setUsers] = useState<User[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
 
   // Fetch users and courses for the form
   useEffect(() => {
@@ -35,14 +37,14 @@ export default function CertificatesPage() {
         const usersResponse = await fetch('/api/admin/users');
         if (usersResponse.ok) {
           const usersData = await usersResponse.json();
-          setUsers(usersData.users);
+          setUsers(usersData.users || []);
         }
 
         // Fetch courses
         const coursesResponse = await fetch('/api/admin/courses');
         if (coursesResponse.ok) {
           const coursesData = await coursesResponse.json();
-          setCourses(coursesData.courses);
+          setCourses(coursesData.courses || []);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -57,7 +59,11 @@ export default function CertificatesPage() {
     if (!response.ok) {
       throw new Error('Failed to fetch certificates');
     }
-    return response.json();
+    const data = await response.json();
+    return {
+      data: data.certificates,
+      pagination: data.pagination
+    };
   };
 
   const validateForm = () => {

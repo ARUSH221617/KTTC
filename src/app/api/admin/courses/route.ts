@@ -25,8 +25,8 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
     const courses = await db.course.findMany({
       where: {
         OR: [
-          { title: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
+          { title: { contains: search } },
+          { description: { contains: search } },
         ],
       },
       skip,
@@ -41,8 +41,8 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
     const totalCount = await db.course.count({
       where: {
         OR: [
-          { title: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
+          { title: { contains: search } },
+          { description: { contains: search } },
         ],
       },
     });

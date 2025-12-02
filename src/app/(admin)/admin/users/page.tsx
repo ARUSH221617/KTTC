@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import DataTable from '@/components/admin/data-table';
+import { DataTable } from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { User as UserIcon, Plus } from 'lucide-react';
@@ -23,7 +23,11 @@ export default function UsersPage() {
     if (!response.ok) {
       throw new Error('Failed to fetch users');
     }
-    return response.json();
+    const data = await response.json();
+    return {
+      data: data.users,
+      pagination: data.pagination
+    };
   };
 
   const validateForm = () => {

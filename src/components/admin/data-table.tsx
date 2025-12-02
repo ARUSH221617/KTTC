@@ -157,11 +157,16 @@ export function DataTable<T extends { id: string }>({
         ...selectedFilters,
       };
       const response = await fetchData(params);
-      setData(response.data);
-      setPagination(response.pagination);
+      if (response && response.data) {
+        setData(response.data);
+        setPagination(response.pagination);
+      } else {
+        setData([]);
+      }
     } catch (error) {
       console.error("Failed to load data:", error);
       toast.error("Failed to load data");
+      setData([]);
     } finally {
       setLoading(false);
     }
@@ -207,15 +212,7 @@ export function DataTable<T extends { id: string }>({
         await onDelete(itemToDelete);
         toast.success('Item deleted successfully');
         // Reload data after deletion
-        const params = {
-          page,
-          limit,
-          search,
-          ...selectedFilters,
-        };
-        const response = await fetchData(params);
-        setData(response.data);
-        setPagination(response.pagination);
+        loadData();
       } catch (error) {
         console.error('Error deleting item:', error);
         toast.error('Failed to delete item');
@@ -318,7 +315,7 @@ export function DataTable<T extends { id: string }>({
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : data.length > 0 ? (
+            ) : data && data.length > 0 ? (
               data.map((item: any, index) => (
                 <TableRow key={item.id || index}>
                   {columns.map((column) => (
