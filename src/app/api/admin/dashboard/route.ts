@@ -26,12 +26,12 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
       db.course.count(),
       db.certificate.count(),
       db.user.findMany({
-        take: 5,
+        take: 3,
         orderBy: { createdAt: 'desc' },
         select: { id: true, name: true, email: true, createdAt: true }
       }),
       db.course.findMany({
-        take: 5,
+        take: 3,
         orderBy: { createdAt: 'desc' },
         select: { id: true, title: true, instructor: { select: { name: true } }, createdAt: true }
       })

@@ -69,7 +69,7 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
   }
 }
 
-export async function POST(request: NextApiRequest, response: NextApiResponse) {
+export async function POST(request: any, response: any) {
   try {
     // Verify admin session
     const session = await auth(request, response);
@@ -80,7 +80,7 @@ export async function POST(request: NextApiRequest, response: NextApiResponse) {
       });
     }
 
-    const body = await request.body;
+    const body = await request.json();
     const { userId, courseId, issuedDate } = body;
 
     // Validate required fields
@@ -113,7 +113,7 @@ export async function POST(request: NextApiRequest, response: NextApiResponse) {
   }
 }
 
-export async function PUT(request: NextApiRequest, response: NextApiResponse) {
+export async function PUT(request: any, response: any) {
   try {
     // Verify admin session
     const session = await auth(request,response);
@@ -124,7 +124,7 @@ export async function PUT(request: NextApiRequest, response: NextApiResponse) {
       });
     }
 
-    const body = await request.body;
+    const body = await request.json();
     const { id, issuedDate } = body;
 
     if (!id) {
