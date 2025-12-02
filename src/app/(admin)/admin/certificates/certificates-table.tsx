@@ -52,23 +52,6 @@ export const columns: ColumnDef<CertificateWithRelations>[] = [
     cell: ({ row }) => row.original.course?.title || "N/A"
   },
   {
-    accessorKey: "issuedDate",
-    header: "Is Issued",
-    cell: ({ row }) => {
-      const date = row.original.issuedDate;
-      const isIssued = !!date;
-      return (
-        <div title={date ? new Date(date).toLocaleDateString() : 'Not issued'}>
-          {isIssued ? (
-            <Badge variant="default" className="bg-green-500 hover:bg-green-600">Yes</Badge>
-          ) : (
-            <Badge variant="secondary">No</Badge>
-          )}
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: "isValid",
     header: "Status",
     cell: ({ row }) => {
@@ -107,23 +90,6 @@ export function getCertificatesColumns(onEdit?: (certificate: CertificateWithRel
       key: 'course',
       title: 'Course',
       render: (certificate: CertificateWithRelations) => certificate.course?.title || "N/A"
-    },
-    {
-      key: 'issuedDate',
-      title: 'Is Issued',
-      render: (certificate: CertificateWithRelations) => {
-        const date = certificate.issuedDate;
-        const isIssued = !!date;
-        return (
-          <div title={date ? new Date(date).toLocaleDateString() : 'Not issued'}>
-            {isIssued ? (
-              <Badge variant="default" className="bg-green-500 hover:bg-green-600">Yes</Badge>
-            ) : (
-              <Badge variant="secondary">No</Badge>
-            )}
-          </div>
-        );
-      },
     },
     {
       key: 'isValid',
