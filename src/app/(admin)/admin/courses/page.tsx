@@ -5,6 +5,9 @@ import { DataTable } from '@/components/admin/data-table';
 import { toast } from 'sonner';
 import { GraduationCap, DollarSign, Plus } from 'lucide-react';
 import { getCoursesColumns, CourseWithInstructor } from './courses-table';
+import ImageUpload from '@/components/ui/image-upload';
+import { InstructorSelect } from '@/components/ui/instructor-select';
+import Editor from '@/components/ui/editor';
 
 interface User {
   id: string;
@@ -223,30 +226,22 @@ export default function CoursesPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="Enter course description"
-                    rows={3}
-                  />
+                  <div className="max-h-60 overflow-y-auto">
+                    <Editor
+                      value={formData.description}
+                      onChange={(value) => setFormData({ ...formData, description: value })}
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Instructor</label>
-                  <select
+                  <InstructorSelect
                     value={formData.instructorId}
-                    onChange={(e) => setFormData({...formData, instructorId: e.target.value})}
-                    className={`w-full p-2 border rounded ${formErrors.instructorId ? 'border-red-500' : 'border-gray-300'}`}
-                  >
-                    <option value="">Select Instructor</option>
-                    {instructors.map((instructor) => (
-                      <option key={instructor.id} value={instructor.id}>
-                        {instructor.name}
-                      </option>
-                    ))}
-                  </select>
-                  {formErrors.instructorId && <p className="text-red-500 text-sm mt-1">{formErrors.instructorId}</p>}
+                    onChange={(value) => setFormData({...formData, instructorId: value})}
+                    instructors={instructors}
+                    error={formErrors.instructorId}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -266,25 +261,23 @@ export default function CoursesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Duration</label>
+                    <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
                     <input
-                      type="text"
+                      type="number"
                       value={formData.duration}
                       onChange={(e) => setFormData({...formData, duration: e.target.value})}
                       className="w-full p-2 border border-gray-300 rounded"
-                      placeholder="e.g., 4 weeks"
+                      placeholder="e.g., 60"
+                      min="0"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Thumbnail URL</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium mb-1">Thumbnail</label>
+                  <ImageUpload
                     value={formData.thumbnail}
-                    onChange={(e) => setFormData({...formData, thumbnail: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="Enter thumbnail URL"
+                    onChange={(url) => setFormData({...formData, thumbnail: url})}
                   />
                 </div>
               </div>
