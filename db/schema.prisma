@@ -43,7 +43,7 @@ model Certificate {
   certificateNo String?  @unique
   userId        String
   courseId      String
-  issuedDate    DateTime @default(now())
+  status        String   @default("valid")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

@@ -25,7 +25,7 @@ export interface CertificateWithRelations extends Omit<Certificate, 'holderName'
     id: string;
     title: string;
   };
-  issuedDate: string; // Using issuedDate as in the page
+  status: string;
 }
 
 interface CertificatesTableProps {
@@ -52,10 +52,11 @@ export const columns: ColumnDef<CertificateWithRelations>[] = [
     cell: ({ row }) => row.original.course?.title || "N/A"
   },
   {
-    accessorKey: "isValid",
+    accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const isValid = row.original.isValid;
+      const status = row.original.status || 'valid';
+      const isValid = status === 'valid';
       return (
         <Badge variant={isValid ? "default" : "destructive"}>
           {isValid ? "Valid" : "Invalid"}
@@ -92,10 +93,11 @@ export function getCertificatesColumns(onEdit?: (certificate: CertificateWithRel
       render: (certificate: CertificateWithRelations) => certificate.course?.title || "N/A"
     },
     {
-      key: 'isValid',
+      key: 'status',
       title: 'Status',
       render: (certificate: CertificateWithRelations) => {
-        const isValid = certificate.isValid;
+        const status = certificate.status || 'valid';
+        const isValid = status === 'valid';
         return (
           <Badge variant={isValid ? "default" : "destructive"}>
             {isValid ? "Valid" : "Invalid"}

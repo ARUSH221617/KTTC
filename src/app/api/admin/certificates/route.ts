@@ -83,7 +83,7 @@ export async function POST(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { userId, courseId, issuedDate, certificateNo } = body;
+    const { userId, courseId, status, certificateNo } = body;
 
     // Validate required fields
     if (!userId || !courseId) {
@@ -98,7 +98,7 @@ export async function POST(request: any, response: any) {
       data: {
         userId,
         courseId,
-        issuedDate: issuedDate ? new Date(issuedDate) : new Date(),
+        status: status || 'valid',
         certificateNo: certificateNo || undefined,
       },
     });
@@ -128,7 +128,7 @@ export async function PUT(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { id, issuedDate, certificateNo } = body;
+    const { id, status, certificateNo } = body;
 
     if (!id) {
       return new Response(JSON.stringify({ error: 'Certificate ID is required' }), {
@@ -141,7 +141,7 @@ export async function PUT(request: any, response: any) {
     const updatedCertificate = await db.certificate.update({
       where: { id },
       data: {
-        issuedDate: issuedDate ? new Date(issuedDate) : undefined,
+        status: status || undefined,
         certificateNo: certificateNo !== undefined ? certificateNo : undefined,
       },
     });
