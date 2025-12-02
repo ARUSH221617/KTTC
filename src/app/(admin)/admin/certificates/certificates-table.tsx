@@ -52,13 +52,6 @@ export const columns: ColumnDef<CertificateWithRelations>[] = [
     cell: ({ row }) => row.original.course?.title || "N/A"
   },
   {
-    accessorKey: "issuedDate",
-    header: "Issued Date",
-    cell: ({ row }) => {
-      return new Date(row.original.issuedDate).toLocaleDateString();
-    },
-  },
-  {
     accessorKey: "isValid",
     header: "Status",
     cell: ({ row }) => {
@@ -97,13 +90,6 @@ export function getCertificatesColumns(onEdit?: (certificate: CertificateWithRel
       key: 'course',
       title: 'Course',
       render: (certificate: CertificateWithRelations) => certificate.course?.title || "N/A"
-    },
-    {
-      key: 'issuedDate',
-      title: 'Issued Date',
-      render: (certificate: CertificateWithRelations) => {
-        return new Date(certificate.issuedDate).toLocaleDateString();
-      },
     },
     {
       key: 'isValid',
