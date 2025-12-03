@@ -141,6 +141,7 @@ export const authOptions = {
   pages: {
     signIn: "/login",
   },
+  secret: process.env.AUTH_SECRET || process.env.JWT_SECRET || (process.env.NODE_ENV === 'development' ? 'fallback_jwt_secret_for_development' : undefined),
 };
 
 export const {
