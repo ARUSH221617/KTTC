@@ -151,7 +151,7 @@ async function main() {
         certificateNo: 'KTTC-2024-0001',
         userId: student1.id,
         courseId: courses[0].id,
-        issuedDate: new Date('2024-03-15'),
+        createdAt: new Date('2024-03-15'),
       },
     }),
     db.certificate.create({
@@ -159,7 +159,7 @@ async function main() {
         certificateNo: 'KTTC-2024-0002',
         userId: student2.id,
         courseId: courses[4].id,
-        issuedDate: new Date('2024-02-20'),
+        createdAt: new Date('2024-02-20'),
       },
     }),
   ]);
