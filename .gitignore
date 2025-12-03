@@ -50,3 +50,5 @@ server.logprisma/dev.db
 
 prisma/dev.db
 .env*.local
+dev.log
+server.log
