@@ -4,6 +4,7 @@ CREATE TABLE "User" (
     "name" TEXT,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'user',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -18,8 +19,9 @@ CREATE TABLE "Course" (
     "category" TEXT NOT NULL,
     "level" TEXT NOT NULL,
     "duration" TEXT NOT NULL,
-    "instructor" TEXT NOT NULL,
     "thumbnail" TEXT NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "instructorId" TEXT NOT NULL,
     "popularity" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -30,11 +32,10 @@ CREATE TABLE "Course" (
 -- CreateTable
 CREATE TABLE "Certificate" (
     "id" TEXT NOT NULL,
-    "certificateNo" TEXT NOT NULL,
-    "holderName" TEXT NOT NULL,
+    "certificateNo" TEXT,
+    "userId" TEXT NOT NULL,
     "courseId" TEXT NOT NULL,
-    "issueDate" TIMESTAMP(3) NOT NULL,
-    "isValid" BOOLEAN NOT NULL DEFAULT true,
+    "status" TEXT NOT NULL DEFAULT 'valid',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -60,6 +61,7 @@ CREATE TABLE "Contact" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "message" TEXT NOT NULL,
+    "subject" TEXT NOT NULL DEFAULT 'No Subject',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -71,6 +73,12 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Certificate_certificateNo_key" ON "Certificate"("certificateNo");
+
+-- AddForeignKey
+ALTER TABLE "Course" ADD CONSTRAINT "Course_instructorId_fkey" FOREIGN KEY ("instructorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Certificate" ADD CONSTRAINT "Certificate_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Certificate" ADD CONSTRAINT "Certificate_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
