@@ -6,10 +6,21 @@ import { db } from './db';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 
-// Secret key for JWT (in production, use a strong secret from environment variables)
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fallback_jwt_secret_for_development'
+// Secret key for JWT
+// In production, this MUST be set in environment variables.
+// If missing in development, we fallback to a hardcoded string.
+// If missing in production, we generate a random one to prevent crash, but sessions will be invalidated on restart.
+const secret = process.env.AUTH_SECRET || process.env.JWT_SECRET || (
+  process.env.NODE_ENV === 'development'
+    ? 'fallback_jwt_secret_for_development'
+    : randomBytes(32).toString('hex')
 );
+
+const JWT_SECRET = new TextEncoder().encode(secret);
+
+if (!process.env.AUTH_SECRET && !process.env.JWT_SECRET && process.env.NODE_ENV !== 'development') {
+  console.warn('WARN: AUTH_SECRET or JWT_SECRET is not defined. Using a generated temporary secret. Sessions will be invalidated on server restart.');
+}
 
 /**
  * Creates an admin session token using JWT.
@@ -141,7 +152,7 @@ export const authOptions = {
   pages: {
     signIn: "/login",
   },
-  secret: process.env.AUTH_SECRET || process.env.JWT_SECRET || (process.env.NODE_ENV === 'development' ? 'fallback_jwt_secret_for_development' : undefined),
+  secret: secret,
 };
 
 export const {
