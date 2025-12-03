@@ -4,10 +4,6 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Configure database connection based on environment
-const isDevelopment = process.env.NODE_ENV === 'development'
-const databaseUrl = process.env.DATABASE_URL || (isDevelopment ? 'file:./dev.db' : '')
-
 /**
  * The Prisma Client instance for database interactions.
  * In non-production environments, it reuses the existing connection to prevent multiple instances.
