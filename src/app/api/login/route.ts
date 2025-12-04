@@ -1,18 +1,21 @@
 // src/app/api/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAdminCredentials, createAdminSession } from '@/lib/auth';
+import { loginSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
 
-    // Validate required fields
-    if (!email || !password) {
+    const result = loginSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Validation failed', details: result.error.format() },
         { status: 400 }
       );
     }
+
+    const { email, password } = result.data;
 
     // Check credentials
     const user = await checkAdminCredentials(email, password);

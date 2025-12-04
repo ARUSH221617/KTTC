@@ -12,7 +12,7 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   // Handle ESM modules
   transformIgnorePatterns: [
-    '/node_modules/(?!(@mswjs|msw|until-async)/)',
+    '/node_modules/(?!(@mswjs|msw|until-async|next-auth|@auth)/)',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

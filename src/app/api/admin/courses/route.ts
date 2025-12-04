@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { courseSchema, courseUpdateSchema } from "@/lib/validations";
 
 export async function GET(request: NextApiRequest, response: NextApiResponse) {
   try {
@@ -80,13 +81,11 @@ export async function POST(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { title, description, instructorId, price, duration, thumbnail } =
-      body;
 
-    // Validate required fields
-    if (!title || !instructorId) {
+    const result = courseSchema.safeParse(body);
+    if (!result.success) {
       return new Response(
-        JSON.stringify({ error: "Title and instructor ID are required" }),
+        JSON.stringify({ error: "Validation failed", details: result.error.format() }),
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -94,17 +93,19 @@ export async function POST(request: any, response: any) {
       );
     }
 
+    const { title, description, instructorId, price, duration, thumbnail, category, level } = result.data;
+
     // Create new course
     const newCourse = await db.course.create({
       data: {
         title,
-        description: description || "",
-        category: "Unknown",
-        level: "test",
+        description,
+        category: category || "Unknown",
+        level: level || "test",
         popularity: 1,
         instructorId,
-        price: parseFloat(price) || 0,
-        duration: duration || "",
+        price,
+        duration,
         thumbnail: thumbnail || "",
       },
     });
@@ -134,15 +135,19 @@ export async function PUT(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { id, title, description, instructorId, price, duration, thumbnail } =
-      body;
 
-    if (!id) {
-      return new Response(JSON.stringify({ error: "Course ID is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+    const result = courseUpdateSchema.safeParse(body);
+    if (!result.success) {
+       return new Response(
+        JSON.stringify({ error: "Validation failed", details: result.error.format() }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
+
+    const { id, title, description, instructorId, price, duration, thumbnail, category, level } = result.data;
 
     // Update course
     const updatedCourse = await db.course.update({
@@ -151,9 +156,11 @@ export async function PUT(request: any, response: any) {
         title,
         description,
         instructorId,
-        price: parseFloat(price) || 0,
+        price,
         duration,
         thumbnail,
+        category,
+        level,
       },
     });
 

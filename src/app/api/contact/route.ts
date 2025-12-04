@@ -1,26 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { contactSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, message, subject } = await request.json();
+    const body = await request.json();
 
-    // Validate required fields
-    if (!name || !email || !message) {
+    const result = contactSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Name, email, and message are required' },
+        { error: 'Validation failed', details: result.error.format() },
         { status: 400 }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
+    const { name, email, message, subject } = result.data;
 
     // Save contact message to database
     const contact = await db.contact.create({

@@ -14,6 +14,15 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
+// Mock authentication
+jest.mock('@/lib/auth', () => ({
+  validateAdminSession: jest.fn(),
+}));
+
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(),
+}));
+
 describe('GET /api/courses', () => {
   it('should sort courses by popularity in descending order', async () => {
     const mockCourses = [
