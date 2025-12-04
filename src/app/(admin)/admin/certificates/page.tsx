@@ -29,6 +29,7 @@ interface Course {
 export default function CertificatesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCertificate, setEditingCertificate] = useState<CertificateWithRelations | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [formData, setFormData] = useState({
     certificateNo: '',
     userId: '',
@@ -127,6 +128,7 @@ export default function CertificatesPage() {
 
       if (response.ok) {
         toast.success(`Certificate ${editingCertificate ? 'updated' : 'created'} successfully`);
+        setRefreshTrigger(prev => prev + 1);
         handleOpenChange(false);
       } else {
         toast.error(result.error || `Failed to ${editingCertificate ? 'update' : 'create'} certificate`);
@@ -208,6 +210,7 @@ export default function CertificatesPage() {
         onDelete={handleDeleteCertificate}
         addButtonLabel="Issue Certificate"
         searchPlaceholder="Search certificates..."
+        refreshTrigger={refreshTrigger}
       />
 
       <Sheet open={showAddModal} onOpenChange={handleOpenChange}>

@@ -27,6 +27,7 @@ export default function CoursesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCourse, setEditingCourse] =
     useState<CourseWithInstructor | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -130,6 +131,7 @@ export default function CoursesPage() {
         toast.success(
           `Course ${editingCourse ? "updated" : "created"} successfully`
         );
+        setRefreshTrigger((prev) => prev + 1);
         handleOpenChange(false);
       } else {
         toast.error(
@@ -220,6 +222,7 @@ export default function CoursesPage() {
         onDelete={handleDeleteCourse}
         addButtonLabel="Add Course"
         searchPlaceholder="Search courses..."
+        refreshTrigger={refreshTrigger}
       />
 
       <Sheet open={showAddModal} onOpenChange={handleOpenChange}>

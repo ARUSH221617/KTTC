@@ -19,6 +19,7 @@ import {
 export default function UsersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -82,6 +83,7 @@ export default function UsersPage() {
 
       if (response.ok) {
         toast.success(`User ${editingUser ? 'updated' : 'created'} successfully`);
+        setRefreshTrigger(prev => prev + 1);
         handleOpenChange(false);
       } else {
         toast.error(result.error || `Failed to ${editingUser ? 'update' : 'create'} user`);
@@ -152,6 +154,7 @@ export default function UsersPage() {
         onDelete={handleDeleteUser}
         addButtonLabel="Add User"
         searchPlaceholder="Search users..."
+        refreshTrigger={refreshTrigger}
       />
 
       <Sheet open={showAddModal} onOpenChange={handleOpenChange}>
