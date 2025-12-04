@@ -11,9 +11,9 @@ export async function GET(request: NextRequest) {
       const certificate = await db.certificate.findUnique({
         where: { certificateNo },
         include: {
+          user: true,
           course: {
-            select: {
-              title: true,
+            include: {
               instructor: true
             }
           }
@@ -30,7 +30,10 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      if (!certificate.isValid) {
+      // Check status field (schema update)
+      const isValid = certificate.status === 'valid';
+
+      if (!isValid) {
         return NextResponse.json(
           { 
             isValid: false, 
@@ -43,21 +46,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         isValid: true,
         certificate: {
-          holderName: certificate.holderName,
+          holderName: certificate.user.name,
           courseTitle: certificate.course.title,
-          instructorName: certificate.course.instructor,
-          issueDate: certificate.issueDate,
+          instructorName: certificate.course.instructor.name,
+          issueDate: certificate.createdAt,
           certificateId: certificate.certificateNo,
-          // Add additional fields as needed
+          status: certificate.status,
         }
       });
     } else {
       // Get all certificates (admin use)
       const certificates = await db.certificate.findMany({
         include: {
+          user: true,
           course: {
-            select: {
-              title: true,
+            include: {
               instructor: true
             }
           }
@@ -67,6 +70,7 @@ export async function GET(request: NextRequest) {
         }
       });
 
+      // Map to a friendlier format if needed, or return as is
       return NextResponse.json(certificates);
     }
   } catch (error) {
@@ -80,12 +84,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { certificateNo, holderName, courseId, issueDate } = await request.json();
+    const { certificateNo, userId, courseId, status } = await request.json();
 
     // Validate required fields
-    if (!certificateNo || !holderName || !courseId || !issueDate) {
+    if (!certificateNo || !userId || !courseId) {
       return NextResponse.json(
-        { error: 'All required fields must be provided' },
+        { error: 'Certificate number, User ID, and Course ID are required' },
         { status: 400 }
       );
     }
@@ -114,18 +118,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify user exists (optional but recommended)
+    const user = await db.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
     // Create new certificate
     const certificate = await db.certificate.create({
       data: {
         certificateNo,
-        holderName,
+        userId,
         courseId,
-        issueDate: new Date(issueDate),
+        status: status || 'valid',
       },
       include: {
+        user: true,
         course: {
-          select: {
-            title: true,
+          include: {
             instructor: true
           }
         }
@@ -152,7 +168,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { certificateNo, isValid } = await request.json();
+    const { certificateNo, status } = await request.json();
 
     if (!certificateNo) {
       return NextResponse.json(
@@ -161,14 +177,21 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update certificate validity
+    if (!status) {
+       return NextResponse.json(
+        { error: 'Status is required' },
+        { status: 400 }
+      );
+    }
+
+    // Update certificate status
     const certificate = await db.certificate.update({
       where: { certificateNo },
-      data: { isValid },
+      data: { status },
       include: {
+        user: true,
         course: {
-          select: {
-            title: true,
+          include: {
             instructor: true
           }
         }
@@ -178,7 +201,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       { 
         success: true, 
-        message: `Certificate ${isValid ? 'activated' : 'revoked'} successfully`,
+        message: `Certificate status updated to ${status} successfully`,
         certificate 
       }
     );
