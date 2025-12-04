@@ -1,15 +1,16 @@
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextApiRequest, response: NextApiResponse) {
   try {
-    const session = await auth();
+    const session = await auth(request, response);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url!);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
@@ -50,14 +51,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextApiRequest, response: NextApiResponse) {
   try {
-    const session = await auth();
+    const session = await auth(request, response);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.body;
     const { name, role, content, avatar } = body;
 
     // Validate required fields
@@ -81,14 +82,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(request: NextApiRequest, response: NextApiResponse) {
   try {
-    const session = await auth();
+    const session = await auth(request, response);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.body;
     const { id, name, role, content, avatar } = body;
 
     if (!id) {
@@ -112,14 +113,14 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(request: NextApiRequest, response: NextApiResponse) {
   try {
-    const session = await auth();
+    const session = await auth(request, response);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url!);
     const id = searchParams.get('id');
 
     if (!id) {
