@@ -30,10 +30,24 @@ describe('GET /api/testimonials', () => {
 
     expect(db.testimonial.findMany).toHaveBeenCalledWith({
       orderBy: { createdAt: 'desc' },
+      take: 6,
     });
     // Serialize dates to string to match JSON response
     const expected = JSON.parse(JSON.stringify(mockTestimonials));
     expect(data).toEqual(expected);
+  });
+
+  it('should return only the 6 most recent testimonials', async () => {
+    (db.testimonial.findMany as jest.Mock).mockResolvedValue([]);
+
+    await GET();
+
+    expect(db.testimonial.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+      })
+    );
   });
 });
 
