@@ -40,6 +40,16 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface MediaBlob {
   url: string;
@@ -58,6 +68,10 @@ export default function MediaPage() {
   const [processing, setProcessing] = useState<string | null>(null); // url being processed
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [replaceTarget, setReplaceTarget] = useState<string | null>(null);
+
+  // Rename state
+  const [renamingBlob, setRenamingBlob] = useState<MediaBlob | null>(null);
+  const [newFilename, setNewFilename] = useState("");
 
   const fetchMedia = async () => {
     try {
@@ -163,6 +177,48 @@ export default function MediaPage() {
     }
   };
 
+  const handleRenameClick = (blob: MediaBlob) => {
+    setRenamingBlob(blob);
+    setNewFilename(blob.pathname);
+  };
+
+  const handleRenameSubmit = async () => {
+    if (!renamingBlob || !newFilename.trim()) return;
+
+    // Check if filename changed
+    if (newFilename === renamingBlob.pathname) {
+        setRenamingBlob(null);
+        return;
+    }
+
+    try {
+        setProcessing(renamingBlob.url);
+        setRenamingBlob(null); // Close dialog immediately
+
+        const res = await fetch("/api/admin/media/actions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                action: "rename",
+                url: renamingBlob.url,
+                newFilename: newFilename.trim()
+            }),
+        });
+
+        if (!res.ok) throw new Error("Failed to rename");
+
+        const data = await res.json();
+
+        toast.success("File renamed successfully");
+        fetchMedia();
+    } catch (error) {
+        console.error(error);
+        toast.error("Error renaming file");
+    } finally {
+        setProcessing(null);
+    }
+  };
+
   const formatSize = (bytes: number) => {
     if (bytes === 0) return "0 B";
     const k = 1024;
@@ -247,6 +303,22 @@ export default function MediaPage() {
                   <div className="truncate font-medium text-base text-gray-900" title={blob.pathname}>
                       {blob.pathname}
                   </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={() => handleRenameClick(blob)}
+                                disabled={!!processing}
+                            >
+                                <Pencil className="h-3 w-3" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Rename</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
               </div>
               <div className="flex justify-between items-center text-xs text-muted-foreground">
                   <span>{formatSize(blob.size)}</span>
@@ -364,6 +436,36 @@ export default function MediaPage() {
             </div>
         )}
       </div>
+
+      <Dialog open={!!renamingBlob} onOpenChange={(open) => !open && setRenamingBlob(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>Rename File</DialogTitle>
+                <DialogDescription>
+                    Enter a new name for the file. This will update all references to this file.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="filename" className="text-right">
+                        Name
+                    </Label>
+                    <Input
+                        id="filename"
+                        value={newFilename}
+                        onChange={(e) => setNewFilename(e.target.value)}
+                        className="col-span-3"
+                    />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setRenamingBlob(null)}>Cancel</Button>
+                <Button onClick={handleRenameSubmit} disabled={!newFilename.trim() || newFilename === renamingBlob?.pathname}>
+                    Save changes
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
