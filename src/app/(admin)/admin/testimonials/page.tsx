@@ -16,11 +16,12 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import ImageUpload from '@/components/ui/image-upload';
-import { Textarea } from '@/components/ui/textarea';
+import Editor from '@/components/ui/editor';
 
 export default function AdminTestimonialsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
     role: '',
@@ -91,6 +92,7 @@ export default function AdminTestimonialsPage() {
 
       if (response.ok) {
         toast.success(`Testimonial ${editingTestimonial ? 'updated' : 'created'} successfully`);
+        setRefreshTrigger(prev => prev + 1);
         handleOpenChange(false);
       } else {
         toast.error(result.error || `Failed to ${editingTestimonial ? 'update' : 'create'} testimonial`);
@@ -163,10 +165,11 @@ export default function AdminTestimonialsPage() {
         onDelete={handleDeleteTestimonial}
         addButtonLabel="Add Testimonial"
         searchPlaceholder="Search testimonials..."
+        refreshTrigger={refreshTrigger}
       />
 
       <Sheet open={showAddModal} onOpenChange={handleOpenChange}>
-        <SheetContent className="flex flex-col h-full sm:max-w-lg w-full">
+        <SheetContent className="flex flex-col h-full sm:max-w-4xl w-full">
           <SheetHeader>
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
@@ -217,12 +220,9 @@ export default function AdminTestimonialsPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Content</label>
-                <Textarea
+                <Editor
                   value={formData.content}
-                  onChange={(e) => setFormData({...formData, content: e.target.value})}
-                  className={`w-full p-2 border rounded ${formErrors.content ? 'border-red-500' : 'border-gray-300'}`}
-                  placeholder="Enter testimonial content"
-                  rows={5}
+                  onChange={(value) => setFormData({...formData, content: value})}
                 />
                 {formErrors.content && <p className="text-red-500 text-sm mt-1">{formErrors.content}</p>}
               </div>
