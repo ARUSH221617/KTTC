@@ -61,6 +61,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Image from "next/image";
 
 interface MediaBlob {
   url: string;
@@ -428,13 +429,13 @@ export default function MediaPage() {
         <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
                 {filteredBlobs.map((blob) => (
-                <Card key={blob.url} className="overflow-hidden flex flex-col group relative rounded-xl shadow-sm border-gray-200 bg-white hover:shadow-md transition-all hover:border-gray-300">
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                <Card key={blob.url} className="overflow-hidden py-0 flex flex-col group relative rounded-xl shadow-sm border-gray-200 bg-white hover:shadow-md transition-all hover:border-gray-300">
+                    <div className="relative aspect-4/3 w-full overflow-hidden bg-gray-100">
                         {isImage(blob.pathname) ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <Image
                                 src={blob.url}
                                 alt={blob.pathname}
+                                fill
                                 className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                                 loading="lazy"
                             />
@@ -468,7 +469,7 @@ export default function MediaPage() {
                         )}
                     </div>
 
-                    <CardContent className="p-3 flex-1 flex flex-col gap-1">
+                    <CardContent className="px-3 py-1.5 flex-1 flex flex-col gap-1">
                     <div className="flex items-start justify-between gap-2">
                         <div className="truncate font-medium text-sm text-gray-900 leading-tight" title={blob.pathname}>
                             {blob.pathname}
