@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { list } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { validateAdminSession } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const adminToken = cookieStore.get('admin_token')?.value;
@@ -18,10 +18,21 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. List all blobs
-    const { blobs } = await list();
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const cursor = searchParams.get('cursor') || undefined;
+    const search = searchParams.get('search') || undefined;
+
+    // 1. List blobs with pagination and prefix search
+    const { blobs, hasMore, cursor: nextCursor } = await list({
+      limit,
+      cursor,
+      prefix: search,
+    });
 
     // 2. Fetch all DB data relevant to media usage
+    // Note: We fetch all because we need to check if ANY record uses the blobs on THIS page.
+    // In a massive system, we would have a 'Media' table with relations, but here we scan.
     const courses = await db.course.findMany({
       select: {
         id: true,
@@ -94,7 +105,11 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ blobs: blobsWithUsage });
+    return NextResponse.json({
+      blobs: blobsWithUsage,
+      hasMore,
+      nextCursor
+    });
   } catch (error) {
     console.error('Error fetching media:', error);
     return NextResponse.json(
