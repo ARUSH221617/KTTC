@@ -6,11 +6,12 @@ import {
   Trash2,
   RefreshCw,
   Zap,
-  Upload,
   Loader2,
   Image as ImageIcon,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Download,
+  Pencil
 } from "lucide-react";
 import { toast } from "sonner";
 import { upload } from "@vercel/blob/client";
@@ -19,8 +20,6 @@ import {
   Card,
   CardContent,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -201,10 +200,10 @@ export default function MediaPage() {
         onChange={handleFileChange}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {blobs.map((blob) => (
-          <Card key={blob.url} className="overflow-hidden flex flex-col group relative">
-            <div className="relative aspect-square bg-muted flex items-center justify-center overflow-hidden">
+          <Card key={blob.url} className="overflow-hidden flex flex-col group relative rounded-xl shadow-sm border-0 bg-white hover:shadow-md transition-shadow">
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
                 {isImage(blob.pathname) ? (
                      // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -214,7 +213,9 @@ export default function MediaPage() {
                         loading="lazy"
                     />
                 ) : (
-                    <FileText className="h-12 w-12 text-muted-foreground" />
+                    <div className="flex items-center justify-center h-full w-full bg-muted">
+                        <FileText className="h-16 w-16 text-muted-foreground opacity-50" />
+                    </div>
                 )}
 
                 {/* Usage Badge Overlay */}
@@ -223,7 +224,7 @@ export default function MediaPage() {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 shadow-sm">
                                         Used {blob.usage.count}x
                                     </Badge>
                                 </TooltipTrigger>
@@ -242,20 +243,56 @@ export default function MediaPage() {
             </div>
 
             <CardContent className="p-4 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                  <div className="truncate font-medium text-sm" title={blob.pathname}>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="truncate font-medium text-base text-gray-900" title={blob.pathname}>
                       {blob.pathname}
                   </div>
               </div>
-              <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+              <div className="flex justify-between items-center text-xs text-muted-foreground">
                   <span>{formatSize(blob.size)}</span>
                   <span>{format(new Date(blob.uploadedAt), "MMM d, yyyy")}</span>
               </div>
             </CardContent>
 
-            <CardFooter className="p-4 pt-0 flex justify-between items-center gap-2">
-                <div className="flex gap-2">
-                    {/* Optimize Button */}
+            <CardFooter className="p-4 pt-0 flex justify-between items-center gap-2 mt-auto">
+                <div className="flex gap-2 items-center">
+                    {/* Download Button */}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                                    asChild
+                                >
+                                    <a href={blob.url} download target="_blank" rel="noopener noreferrer">
+                                        <Download className="h-4 w-4" />
+                                    </a>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Download</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    {/* Replace Button */}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => triggerReplace(blob.url)}
+                                    disabled={!!processing}
+                                    className="h-9 w-9 rounded-full border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 bg-white shadow-sm"
+                                >
+                                    <RefreshCw className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Replace File</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    {/* Optimize Button (Conditional) */}
                     {isImage(blob.pathname) && !isWebP(blob.pathname) && (
                         <TooltipProvider>
                             <Tooltip>
@@ -265,7 +302,7 @@ export default function MediaPage() {
                                         variant="outline"
                                         onClick={() => handleOptimize(blob.url)}
                                         disabled={!!processing}
-                                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        className="h-9 w-9 rounded-full border-gray-200 text-blue-500 hover:text-blue-700 hover:bg-blue-50 bg-white shadow-sm"
                                     >
                                         {processing === blob.url ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -278,24 +315,6 @@ export default function MediaPage() {
                             </Tooltip>
                         </TooltipProvider>
                     )}
-
-                    {/* Replace Button */}
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={() => triggerReplace(blob.url)}
-                                    disabled={!!processing}
-                                    className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                                >
-                                    <RefreshCw className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Replace File</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
                 </div>
 
                 {/* Delete Button */}
@@ -305,7 +324,7 @@ export default function MediaPage() {
                             size="icon"
                             variant="destructive"
                             disabled={!!processing}
-                            className="h-8 w-8"
+                            className="h-9 w-9 rounded-full bg-red-600 hover:bg-red-700 shadow-sm"
                         >
                             <Trash2 className="h-4 w-4" />
                         </Button>
@@ -339,7 +358,7 @@ export default function MediaPage() {
         ))}
 
         {blobs.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center p-12 text-muted-foreground border-2 border-dashed rounded-lg">
+            <div className="col-span-full flex flex-col items-center justify-center p-12 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/30">
                 <ImageIcon className="h-12 w-12 mb-4 opacity-20" />
                 <p>No media files found.</p>
             </div>
