@@ -12,7 +12,8 @@ import {
   Mail,
   MessageSquare,
   LogOut,
-  Settings
+  Settings,
+  Image
 } from "lucide-react";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
@@ -56,6 +57,12 @@ export function Sidebar({ className }: SidebarProps) {
       icon: MessageSquare,
       href: "/admin/testimonials",
       active: pathname.startsWith("/admin/testimonials"),
+    },
+    {
+      label: "Media",
+      icon: Image,
+      href: "/admin/media",
+      active: pathname.startsWith("/admin/media"),
     },
   ];
 
