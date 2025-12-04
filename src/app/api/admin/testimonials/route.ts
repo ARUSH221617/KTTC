@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { NextApiRequest, NextApiResponse } from "next";
 import { NextResponse } from 'next/server';
+import { testimonialSchema, testimonialUpdateSchema } from '@/lib/validations';
 
 export async function GET(request: NextApiRequest, response: NextApiResponse) {
   try {
@@ -51,27 +52,31 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
   }
 }
 
-export async function POST(request: NextApiRequest, response: NextApiResponse) {
+export async function POST(request: any, response: NextApiResponse) {
   try {
     const session = await auth(request, response);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.body;
-    const { name, role, content, avatar } = body;
+    const body = await request.json();
 
-    // Validate required fields
-    if (!name || !role || !content || !avatar) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+    const result = testimonialSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.format() },
+        { status: 400 }
+      );
     }
+
+    const { name, role, content, avatar } = result.data;
 
     const newTestimonial = await db.testimonial.create({
       data: {
         name,
         role,
         content,
-        avatar,
+        avatar: avatar || "",
       },
     });
 
@@ -82,19 +87,24 @@ export async function POST(request: NextApiRequest, response: NextApiResponse) {
   }
 }
 
-export async function PUT(request: NextApiRequest, response: NextApiResponse) {
+export async function PUT(request: any, response: NextApiResponse) {
   try {
     const session = await auth(request, response);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.body;
-    const { id, name, role, content, avatar } = body;
+    const body = await request.json();
 
-    if (!id) {
-      return NextResponse.json({ error: 'Testimonial ID is required' }, { status: 400 });
+    const result = testimonialUpdateSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.format() },
+        { status: 400 }
+      );
     }
+
+    const { id, name, role, content, avatar } = result.data;
 
     const updatedTestimonial = await db.testimonial.update({
       where: { id },

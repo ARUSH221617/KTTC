@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { userSchema, userUpdateSchema } from '@/lib/validations';
+import bcrypt from 'bcryptjs';
 
 export async function GET(request: NextApiRequest, response: NextApiResponse) {
   try {
@@ -77,22 +79,29 @@ export async function POST(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { name, email, role } = body;
 
-    // Validate required fields
-    if (!name || !email) {
-      return new Response(JSON.stringify({ error: 'Name and email are required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const result = userSchema.safeParse(body);
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({ error: "Validation failed", details: result.error.format() }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
+
+    const { name, email, role, password } = result.data;
+    // Default to empty password if not provided (matches previous behavior)
+    // In a real app, you'd trigger an email invite or generate a temporary password.
+    const hashedPassword = await bcrypt.hash(password || "", 10);
 
     // Create new user
     const newUser = await db.user.create({
       data: {
-        name,
+        name: name || null,
         email,
-        password: "",
+        password: hashedPassword,
         role: role || 'user',
       },
     });
@@ -122,23 +131,29 @@ export async function PUT(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { id, name, email, role } = body;
+    const result = userUpdateSchema.safeParse(body);
 
-    if (!id) {
-      return new Response(JSON.stringify({ error: 'User ID is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({ error: "Validation failed", details: result.error.format() }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { id, name, email, role, password } = result.data;
+
+    const updateData: any = { name, email, role };
+    if (password) {
+        updateData.password = await bcrypt.hash(password, 10);
     }
 
     // Update user
     const updatedUser = await db.user.update({
       where: { id },
-      data: {
-        name,
-        email,
-        role,
-      },
+      data: updateData,
     });
 
     return new Response(JSON.stringify(updatedUser), {

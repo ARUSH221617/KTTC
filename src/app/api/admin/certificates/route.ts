@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { certificateSchema, certificateUpdateSchema } from '@/lib/validations';
 
 export async function GET(request: NextApiRequest, response: NextApiResponse) {
   try {
@@ -83,15 +84,19 @@ export async function POST(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { userId, courseId, status, certificateNo } = body;
 
-    // Validate required fields
-    if (!userId || !courseId) {
-      return new Response(JSON.stringify({ error: 'User ID and Course ID are required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const result = certificateSchema.safeParse(body);
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({ error: "Validation failed", details: result.error.format() }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
+
+    const { userId, courseId, status } = result.data;
 
     // Create new certificate
     const newCertificate = await db.certificate.create({
@@ -99,7 +104,6 @@ export async function POST(request: any, response: any) {
         userId,
         courseId,
         status: status || 'valid',
-        certificateNo: certificateNo || undefined,
       },
     });
 
@@ -128,21 +132,25 @@ export async function PUT(request: any, response: any) {
     }
 
     const body = await request.json();
-    const { id, status, certificateNo } = body;
 
-    if (!id) {
-      return new Response(JSON.stringify({ error: 'Certificate ID is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const result = certificateUpdateSchema.safeParse(body);
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({ error: "Validation failed", details: result.error.format() }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
+
+    const { id, status } = result.data;
 
     // Update certificate
     const updatedCertificate = await db.certificate.update({
       where: { id },
       data: {
         status: status || undefined,
-        certificateNo: certificateNo !== undefined ? certificateNo : undefined,
       },
     });
 

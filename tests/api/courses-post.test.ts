@@ -14,8 +14,19 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
+// Mock authentication
+jest.mock('@/lib/auth', () => ({
+  validateAdminSession: jest.fn().mockResolvedValue(true),
+}));
+
+jest.mock('next/headers', () => ({
+  cookies: jest.fn().mockReturnValue({
+    get: jest.fn().mockReturnValue({ value: 'valid_token' }),
+  }),
+}));
+
 describe('POST /api/courses', () => {
-  it('should return 400 if thumbnail is missing', async () => {
+  it('should create course even if thumbnail is missing (optional now)', async () => {
     const body = {
       title: 'New Course',
       description: 'Course Description',
@@ -34,12 +45,11 @@ describe('POST /api/courses', () => {
     const response = await POST(request);
     const data = await response.json();
 
-    expect(response.status).toBe(400);
-    expect(data.error).toBe('All required fields must be provided');
-    expect(db.course.create).not.toHaveBeenCalled();
+    expect(response.status).toBe(201); // Expect success now
+    expect(db.course.create).toHaveBeenCalled();
   });
 
-  it('should return 400 if thumbnail is empty string', async () => {
+  it('should create course even if thumbnail is empty string', async () => {
     const body = {
       title: 'New Course',
       description: 'Course Description',
@@ -58,8 +68,7 @@ describe('POST /api/courses', () => {
     const response = await POST(request);
     const data = await response.json();
 
-    expect(response.status).toBe(400);
-    expect(data.error).toBe('All required fields must be provided');
-    expect(db.course.create).not.toHaveBeenCalled();
+    expect(response.status).toBe(201); // Expect success now
+    expect(db.course.create).toHaveBeenCalled();
   });
 });

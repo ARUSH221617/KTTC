@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { publicCertificateSchema, publicCertificateUpdateSchema } from '@/lib/validations-public';
+import { validateAdminSession } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -84,15 +87,30 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { certificateNo, userId, courseId, status } = await request.json();
+    // Authenticate admin
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get('admin_token')?.value;
 
-    // Validate required fields
-    if (!certificateNo || !userId || !courseId) {
+    if (!adminToken) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const isValid = await validateAdminSession(adminToken);
+    if (!isValid) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    const result = publicCertificateSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Certificate number, User ID, and Course ID are required' },
+        { error: 'Validation failed', details: result.error.format() },
         { status: 400 }
       );
     }
+
+    const { certificateNo, userId, courseId, status } = result.data;
 
     // Check if certificate number already exists
     const existingCertificate = await db.certificate.findUnique({
@@ -168,21 +186,30 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { certificateNo, status } = await request.json();
+    // Authenticate admin
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get('admin_token')?.value;
 
-    if (!certificateNo) {
+    if (!adminToken) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const isValid = await validateAdminSession(adminToken);
+    if (!isValid) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    const result = publicCertificateUpdateSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Certificate number is required' },
+        { error: 'Validation failed', details: result.error.format() },
         { status: 400 }
       );
     }
 
-    if (!status) {
-       return NextResponse.json(
-        { error: 'Status is required' },
-        { status: 400 }
-      );
-    }
+    const { certificateNo, status } = result.data;
 
     // Update certificate status
     const certificate = await db.certificate.update({

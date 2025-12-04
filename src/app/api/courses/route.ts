@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { courseSchema } from '@/lib/validations';
+import { validateAdminSession } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -68,15 +71,31 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, category, level, duration, instructorId, thumbnail } = await request.json();
+    // Authenticate admin
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get('admin_token')?.value;
 
-    // Validate required fields
-    if (!title || !description || !category || !level || !duration || !instructorId || !thumbnail) {
-      return NextResponse.json(
-        { error: 'All required fields must be provided' },
-        { status: 400 }
-      );
+    if (!adminToken) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const isValid = await validateAdminSession(adminToken);
+    if (!isValid) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    const result = courseSchema.safeParse(body);
+
+    if (!result.success) {
+        return NextResponse.json(
+            { error: 'Validation failed', details: result.error.format() },
+            { status: 400 }
+        );
+    }
+
+    const { title, description, category, level, duration, instructorId, thumbnail, price } = result.data;
 
     // Create new course
     const course = await db.course.create({
@@ -88,6 +107,7 @@ export async function POST(request: NextRequest) {
         duration,
         instructor: { connect: { id: instructorId } },
         thumbnail: thumbnail || null,
+        price,
       },
     });
 
