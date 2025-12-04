@@ -11,7 +11,11 @@ import {
   FileText,
   AlertCircle,
   Download,
-  Pencil
+  Pencil,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Filter
 } from "lucide-react";
 import { toast } from "sonner";
 import { upload } from "@vercel/blob/client";
@@ -50,6 +54,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MediaBlob {
   url: string;
@@ -69,17 +80,51 @@ export default function MediaPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [replaceTarget, setReplaceTarget] = useState<string | null>(null);
 
+  // Pagination & Search State
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [history, setHistory] = useState<string[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [filterType, setFilterType] = useState("all");
+
   // Rename state
   const [renamingBlob, setRenamingBlob] = useState<MediaBlob | null>(null);
   const [newFilename, setNewFilename] = useState("");
 
-  const fetchMedia = async () => {
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCursor(undefined); // Reset cursor on search change
+      setHistory([]); // Reset history on search change
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const fetchMedia = async (currentCursor?: string) => {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/media");
+      const params = new URLSearchParams();
+      if (currentCursor) params.append("cursor", currentCursor);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      params.append("limit", "24"); // 6x4 or 4x6 grid friendly
+
+      const res = await fetch(`/api/admin/media?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch media");
+
       const data = await res.json();
       setBlobs(data.blobs);
+      setHasMore(data.hasMore);
+
+      // If we have a next cursor, we can update our state to know where to go next
+      // But for "Next" button, we need to store the cursor returned by API
+      // Actually the API returns `nextCursor`.
+      // We'll store it in a way that the Next button can use it.
+      // But wait, the API returns `nextCursor` which IS the cursor for the next page.
+      // So we need to store `nextCursor` in a ref or state to use when clicking "Next".
+      // Let's use a state for `nextPageCursor`.
+
     } catch (error) {
       toast.error("Error fetching media files");
       console.error(error);
@@ -88,9 +133,48 @@ export default function MediaPage() {
     }
   };
 
+  // We need to store the next cursor returned by the API
+  const [nextPageCursor, setNextPageCursor] = useState<string | undefined>(undefined);
+
   useEffect(() => {
-    fetchMedia();
-  }, []);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (cursor) params.append("cursor", cursor);
+        if (debouncedSearch) params.append("search", debouncedSearch);
+        params.append("limit", "24");
+
+        const res = await fetch(`/api/admin/media?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to fetch media");
+        const data = await res.json();
+        setBlobs(data.blobs);
+        setHasMore(data.hasMore);
+        setNextPageCursor(data.nextCursor);
+      } catch (error) {
+        toast.error("Error fetching media");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [cursor, debouncedSearch]);
+
+
+  const handleNextPage = () => {
+    if (nextPageCursor) {
+      setHistory((prev) => [...prev, cursor || ""]);
+      setCursor(nextPageCursor);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (history.length > 0) {
+      const prevCursor = history[history.length - 1];
+      setHistory((prev) => prev.slice(0, -1));
+      setCursor(prevCursor === "" ? undefined : prevCursor);
+    }
+  };
 
   const handleDelete = async (url: string) => {
     try {
@@ -104,7 +188,19 @@ export default function MediaPage() {
       if (!res.ok) throw new Error("Failed to delete");
 
       toast.success("File deleted successfully");
-      setBlobs((prev) => prev.filter((b) => b.url !== url));
+      // Refetch current page to handle pagination correctly
+      // setBlobs((prev) => prev.filter((b) => b.url !== url)); // This leaves a hole if we don't refetch
+      const params = new URLSearchParams();
+      if (cursor) params.append("cursor", cursor);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      params.append("limit", "24");
+      const r = await fetch(`/api/admin/media?${params.toString()}`);
+      if(r.ok) {
+          const d = await r.json();
+          setBlobs(d.blobs);
+          setHasMore(d.hasMore);
+          setNextPageCursor(d.nextCursor);
+      }
     } catch (error) {
       toast.error("Error deleting file");
     } finally {
@@ -125,7 +221,24 @@ export default function MediaPage() {
       const data = await res.json();
 
       toast.success("Image optimized to WebP");
-      fetchMedia(); // Refresh to see changes
+      // Refreshing the whole list might be overkill, maybe just update the item?
+      // But the URL might change if it was replaced (though optimize keeps URL usually? No, it replaces content).
+      // If extension changes, URL changes? Vercel Blob URLs are immutable.
+      // The optimize action likely uploads a NEW blob and replaces references.
+      // So we should refresh.
+      setCursor(undefined);
+      setHistory([]);
+      // Trigger reload
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      params.append("limit", "24");
+      const r = await fetch(`/api/admin/media?${params.toString()}`);
+      if(r.ok) {
+          const d = await r.json();
+          setBlobs(d.blobs);
+          setHasMore(d.hasMore);
+          setNextPageCursor(d.nextCursor);
+      }
     } catch (error) {
       toast.error("Error optimizing image");
     } finally {
@@ -166,7 +279,18 @@ export default function MediaPage() {
       if (!res.ok) throw new Error("Failed to update references");
 
       toast.success("File replaced successfully");
-      fetchMedia();
+      // Refresh current page
+      const params = new URLSearchParams();
+      if (cursor) params.append("cursor", cursor);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      params.append("limit", "24");
+      const r = await fetch(`/api/admin/media?${params.toString()}`);
+      if(r.ok) {
+          const d = await r.json();
+          setBlobs(d.blobs);
+          setHasMore(d.hasMore);
+          setNextPageCursor(d.nextCursor);
+      }
     } catch (error) {
       console.error(error);
       toast.error("Error replacing file");
@@ -185,7 +309,6 @@ export default function MediaPage() {
   const handleRenameSubmit = async () => {
     if (!renamingBlob || !newFilename.trim()) return;
 
-    // Check if filename changed
     if (newFilename === renamingBlob.pathname) {
         setRenamingBlob(null);
         return;
@@ -193,7 +316,7 @@ export default function MediaPage() {
 
     try {
         setProcessing(renamingBlob.url);
-        setRenamingBlob(null); // Close dialog immediately
+        setRenamingBlob(null);
 
         const res = await fetch("/api/admin/media/actions", {
             method: "POST",
@@ -210,7 +333,18 @@ export default function MediaPage() {
         const data = await res.json();
 
         toast.success("File renamed successfully");
-        fetchMedia();
+        // Refresh
+        const params = new URLSearchParams();
+        if (cursor) params.append("cursor", cursor);
+        if (debouncedSearch) params.append("search", debouncedSearch);
+        params.append("limit", "24");
+        const r = await fetch(`/api/admin/media?${params.toString()}`);
+        if(r.ok) {
+            const d = await r.json();
+            setBlobs(d.blobs);
+            setHasMore(d.hasMore);
+            setNextPageCursor(d.nextCursor);
+        }
     } catch (error) {
         console.error(error);
         toast.error("Error renaming file");
@@ -229,24 +363,54 @@ export default function MediaPage() {
 
   const isImage = (pathname: string) => {
       const ext = pathname.split('.').pop()?.toLowerCase();
-      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '');
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'tiff', 'ico'].includes(ext || '');
   }
 
   const isWebP = (pathname: string) => pathname.toLowerCase().endsWith('.webp');
 
-  if (loading) {
-      return (
-          <div className="flex h-full w-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-      )
-  }
+  const filteredBlobs = blobs.filter(blob => {
+      if (filterType === 'all') return true;
+      if (filterType === 'image') return isImage(blob.pathname);
+      if (filterType === 'document') return !isImage(blob.pathname); // Simple fallback
+      return true;
+  });
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Media Library</h1>
-        <Badge variant="secondary">{blobs.length} files</Badge>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight">Media Library</h1>
+            <p className="text-muted-foreground text-sm mt-1">Manage your files and media assets</p>
+        </div>
+        <div className="flex items-center gap-2">
+             <Badge variant="outline" className="text-base px-3 py-1">{filteredBlobs.length} shown</Badge>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-lg border shadow-sm">
+          <div className="relative w-full sm:w-96">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                  placeholder="Search files..."
+                  className="pl-9"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+              />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="all">All Files</SelectItem>
+                      <SelectItem value="image">Images</SelectItem>
+                      <SelectItem value="document">Documents</SelectItem>
+                  </SelectContent>
+              </Select>
+          </div>
       </div>
 
       <input
@@ -256,186 +420,218 @@ export default function MediaPage() {
         onChange={handleFileChange}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {blobs.map((blob) => (
-          <Card key={blob.url} className="overflow-hidden flex flex-col group relative rounded-xl shadow-sm border-0 bg-white hover:shadow-md transition-shadow">
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
-                {isImage(blob.pathname) ? (
-                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                        src={blob.url}
-                        alt={blob.pathname}
-                        className="object-cover w-full h-full transition-transform group-hover:scale-105"
-                        loading="lazy"
-                    />
-                ) : (
-                    <div className="flex items-center justify-center h-full w-full bg-muted">
-                        <FileText className="h-16 w-16 text-muted-foreground opacity-50" />
+      {loading ? (
+          <div className="flex h-64 w-full items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+      ) : (
+        <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                {filteredBlobs.map((blob) => (
+                <Card key={blob.url} className="overflow-hidden flex flex-col group relative rounded-xl shadow-sm border-gray-200 bg-white hover:shadow-md transition-all hover:border-gray-300">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                        {isImage(blob.pathname) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={blob.url}
+                                alt={blob.pathname}
+                                className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                                loading="lazy"
+                            />
+                        ) : (
+                            <div className="flex items-center justify-center h-full w-full bg-slate-50">
+                                <FileText className="h-16 w-16 text-slate-300" />
+                            </div>
+                        )}
+
+                        {/* Usage Badge Overlay */}
+                        {blob.usage.count > 0 && (
+                            <div className="absolute top-2 right-2 z-10">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-green-700 hover:bg-white border-green-200 shadow-sm">
+                                                Used {blob.usage.count}x
+                                            </Badge>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="left">
+                                            <ul className="list-disc pl-4 text-xs">
+                                                {blob.usage.locations.slice(0, 5).map((loc, i) => (
+                                                    <li key={i}>{loc}</li>
+                                                ))}
+                                                {blob.usage.locations.length > 5 && <li>...and more</li>}
+                                            </ul>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        )}
                     </div>
-                )}
 
-                {/* Usage Badge Overlay */}
-                {blob.usage.count > 0 && (
-                    <div className="absolute top-2 right-2">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 shadow-sm">
-                                        Used {blob.usage.count}x
-                                    </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <ul className="list-disc pl-4 text-xs">
-                                        {blob.usage.locations.slice(0, 5).map((loc, i) => (
-                                            <li key={i}>{loc}</li>
-                                        ))}
-                                        {blob.usage.locations.length > 5 && <li>...and more</li>}
-                                    </ul>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                )}
-            </div>
-
-            <CardContent className="p-4 flex-1">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="truncate font-medium text-base text-gray-900" title={blob.pathname}>
-                      {blob.pathname}
-                  </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 shrink-0"
-                                onClick={() => handleRenameClick(blob)}
-                                disabled={!!processing}
-                            >
-                                <Pencil className="h-3 w-3" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Rename</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-              </div>
-              <div className="flex justify-between items-center text-xs text-muted-foreground">
-                  <span>{formatSize(blob.size)}</span>
-                  <span>{format(new Date(blob.uploadedAt), "MMM d, yyyy")}</span>
-              </div>
-            </CardContent>
-
-            <CardFooter className="p-4 pt-0 flex justify-between items-center gap-2 mt-auto">
-                <div className="flex gap-2 items-center">
-                    {/* Download Button */}
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    size="icon"
-                                    className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                                    asChild
-                                >
-                                    <a href={blob.url} download target="_blank" rel="noopener noreferrer">
-                                        <Download className="h-4 w-4" />
-                                    </a>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Download</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-
-                    {/* Replace Button */}
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={() => triggerReplace(blob.url)}
-                                    disabled={!!processing}
-                                    className="h-9 w-9 rounded-full border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 bg-white shadow-sm"
-                                >
-                                    <RefreshCw className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Replace File</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-
-                    {/* Optimize Button (Conditional) */}
-                    {isImage(blob.pathname) && !isWebP(blob.pathname) && (
+                    <CardContent className="p-3 flex-1 flex flex-col gap-1">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="truncate font-medium text-sm text-gray-900 leading-tight" title={blob.pathname}>
+                            {blob.pathname}
+                        </div>
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
+                                        variant="ghost"
                                         size="icon"
-                                        variant="outline"
-                                        onClick={() => handleOptimize(blob.url)}
+                                        className="h-6 w-6 shrink-0 -mr-2 -mt-1 hover:bg-transparent hover:text-primary"
+                                        onClick={() => handleRenameClick(blob)}
                                         disabled={!!processing}
-                                        className="h-9 w-9 rounded-full border-gray-200 text-blue-500 hover:text-blue-700 hover:bg-blue-50 bg-white shadow-sm"
                                     >
-                                        {processing === blob.url ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Zap className="h-4 w-4" />
-                                        )}
+                                        <Pencil className="h-3 w-3" />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Convert to WebP</TooltipContent>
+                                <TooltipContent>Rename</TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
-                    )}
-                </div>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-muted-foreground mt-auto pt-2">
+                        <span>{formatSize(blob.size)}</span>
+                        <span>{format(new Date(blob.uploadedAt), "MMM d, yyyy")}</span>
+                    </div>
+                    </CardContent>
 
-                {/* Delete Button */}
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button
-                            size="icon"
-                            variant="destructive"
-                            disabled={!!processing}
-                            className="h-9 w-9 rounded-full bg-red-600 hover:bg-red-700 shadow-sm"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Delete File?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone.
-                                {blob.usage.count > 0 && (
-                                    <div className="mt-2 p-2 bg-destructive/10 text-destructive rounded-md flex items-center gap-2 font-semibold">
-                                        <AlertCircle className="h-4 w-4" />
-                                        Warning: This file is used in {blob.usage.count} place(s)!
-                                    </div>
-                                )}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={() => handleDelete(blob.url)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                                Delete
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </CardFooter>
-          </Card>
-        ))}
+                    <CardFooter className="p-3 pt-0 flex justify-between items-center gap-2 mt-auto border-t border-gray-50 bg-gray-50/50">
+                        <div className="flex gap-1 items-center">
+                            {/* Download Button */}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                            asChild
+                                        >
+                                            <a href={blob.url} download target="_blank" rel="noopener noreferrer">
+                                                <Download className="h-4 w-4" />
+                                            </a>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Download</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
 
-        {blobs.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center p-12 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/30">
-                <ImageIcon className="h-12 w-12 mb-4 opacity-20" />
-                <p>No media files found.</p>
+                            {/* Replace Button */}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            onClick={() => triggerReplace(blob.url)}
+                                            disabled={!!processing}
+                                            className="h-8 w-8 text-gray-500 hover:text-orange-600 hover:bg-orange-50"
+                                        >
+                                            <RefreshCw className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Replace File</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
+                            {/* Optimize Button (Conditional) */}
+                            {isImage(blob.pathname) && !isWebP(blob.pathname) && (
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                onClick={() => handleOptimize(blob.url)}
+                                                disabled={!!processing}
+                                                className="h-8 w-8 text-gray-500 hover:text-purple-600 hover:bg-purple-50"
+                                            >
+                                                {processing === blob.url ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Zap className="h-4 w-4" />
+                                                )}
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Convert to WebP</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            )}
+                        </div>
+
+                        {/* Delete Button */}
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    disabled={!!processing}
+                                    className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete File?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone.
+                                        {blob.usage.count > 0 && (
+                                            <div className="mt-2 p-2 bg-destructive/10 text-destructive rounded-md flex items-center gap-2 font-semibold">
+                                                <AlertCircle className="h-4 w-4" />
+                                                Warning: This file is used in {blob.usage.count} place(s)!
+                                            </div>
+                                        )}
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() => handleDelete(blob.url)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </CardFooter>
+                </Card>
+                ))}
             </div>
-        )}
-      </div>
+
+            {filteredBlobs.length === 0 && !loading && (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/30">
+                    <ImageIcon className="h-12 w-12 mb-4 opacity-20" />
+                    <p>No media files found.</p>
+                </div>
+            )}
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between pt-6 border-t mt-6">
+                <Button
+                    variant="outline"
+                    onClick={handlePrevPage}
+                    disabled={history.length === 0 || loading}
+                    className="gap-2"
+                >
+                    <ChevronLeft className="h-4 w-4" /> Previous
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                    {/* Optional: Show page number if we track it, but simpler to just show navigation */}
+                </div>
+                <Button
+                    variant="outline"
+                    onClick={handleNextPage}
+                    disabled={!hasMore || loading}
+                    className="gap-2"
+                >
+                    Next <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+        </>
+      )}
 
       <Dialog open={!!renamingBlob} onOpenChange={(open) => !open && setRenamingBlob(null)}>
         <DialogContent className="sm:max-w-[425px]">
