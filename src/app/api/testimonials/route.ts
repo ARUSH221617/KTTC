@@ -6,7 +6,8 @@ export async function GET() {
     const testimonials = await db.testimonial.findMany({
       orderBy: {
         createdAt: 'desc'
-      }
+      },
+      take: 6
     });
 
     return NextResponse.json(testimonials);
