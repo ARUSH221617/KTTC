@@ -1,8 +1,15 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
+
+const connectionString = process.env.DB_DATABASE_URL
+
+const pool = new pg.Pool({ connectionString })
+const adapter = new PrismaPg(pool)
 
 /**
  * The Prisma Client instance for database interactions.
@@ -11,6 +18,7 @@ const globalForPrisma = globalThis as unknown as {
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
+    adapter,
     log: ['query'],
   })
 
