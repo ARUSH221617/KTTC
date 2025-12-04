@@ -89,6 +89,32 @@ export async function POST(request: Request) {
       await del(url);
 
       return NextResponse.json({ success: true, newUrl });
+    } else if (action === 'rename') {
+      const { url, newFilename } = body;
+      if (!url || !newFilename) {
+        return NextResponse.json({ error: 'URL and new filename are required' }, { status: 400 });
+      }
+
+      // 1. Download file
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch file');
+      const buffer = Buffer.from(await response.arrayBuffer());
+
+      // 2. Upload with new name
+      // Ensure we keep the content type
+      const contentType = response.headers.get('content-type') || 'application/octet-stream';
+      const { url: newUrl } = await put(newFilename, buffer, {
+        access: 'public',
+        contentType,
+      });
+
+      // 3. Update DB references
+      await updateDatabaseReferences(url, newUrl);
+
+      // 4. Delete old blob
+      await del(url);
+
+      return NextResponse.json({ success: true, newUrl });
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
