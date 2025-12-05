@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import SettingsSheet from "@/components/admin/ai-agent-chat/settings-sheet";
 import { InputArea } from "@/components/admin/ai-agent-chat/chat-input";
 import { MessageList } from "@/components/admin/ai-agent-chat/message-list";
 
@@ -22,7 +21,6 @@ export default function AIAgentChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState(""); // Managed state for the rolled-back input
   const [isLoading, setIsLoading] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
   const [chatModel, setChatModel] = useState<string>("");
 
@@ -198,7 +196,6 @@ export default function AIAgentChatPage() {
           onChange={setInput}
           onSend={handleSendMessage}
           isLoading={isLoading}
-          setIsSettingsOpen={setIsSettingsOpen}
           models={models}
           selectedModel={chatModel}
           onModelChange={handleModelChange}
@@ -207,8 +204,6 @@ export default function AIAgentChatPage() {
           AI can make mistakes. Please verify important information.
         </p>
       </div>
-
-      <SettingsSheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </div>
   );
 }

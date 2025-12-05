@@ -41,7 +41,6 @@ interface InputAreaProps {
   onChange: (val: string) => void;
   onSend: () => void;
   isLoading: boolean;
-  setIsSettingsOpen: (open: boolean) => void;
   models: Model[];
   selectedModel: string;
   onModelChange: (modelId: string) => void;
@@ -52,7 +51,6 @@ export const InputArea: React.FC<InputAreaProps> = ({
   onChange,
   onSend,
   isLoading,
-  setIsSettingsOpen,
   models,
   selectedModel,
   onModelChange,
@@ -245,14 +243,6 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <button
-              className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title="Settings"
-              onClick={() => setIsSettingsOpen(true)}
-            >
-              <Settings className="w-5 h-5" />
-            </button>
 
             <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground text-sm transition-colors border border-transparent hover:border-border">
               <ToolsIcon className="w-4 h-4" />
