@@ -13,7 +13,8 @@ import {
   MessageSquare,
   LogOut,
   Settings,
-  Image
+  Image,
+  Bot
 } from "lucide-react";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
@@ -63,6 +64,12 @@ export function Sidebar({ className }: SidebarProps) {
       icon: Image,
       href: "/admin/media",
       active: pathname.startsWith("/admin/media"),
+    },
+    {
+      label: "AI Agent Chat",
+      icon: Bot,
+      href: "/admin/ai-agent-chat",
+      active: pathname.startsWith("/admin/ai-agent-chat"),
     },
   ];
 
