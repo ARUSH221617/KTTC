@@ -49,13 +49,11 @@ export async function authenticate(prevState: Result | undefined, formData: Form
       };
     }
 
-    // Create admin session - NOTE: createAdminSession is now async
+    // Create admin session with JWT token
     const sessionToken = await createAdminSession(user.id, user.email);
 
     // Set the session cookie
-    (await
-      // Set the session cookie
-      cookies()).set('admin_token', sessionToken, {
+    (await cookies()).set('admin_token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24, // 24 hours

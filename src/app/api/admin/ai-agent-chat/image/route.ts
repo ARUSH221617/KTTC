@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { OpenRouter } from "@openrouter/sdk";
+import { NextApiRequest, NextApiResponse } from "next";
 
-export async function POST(req: NextRequest) {
-  const session = await auth();
+export async function POST(req: any|NextApiRequest, res: any|NextApiResponse) {
+  const session = await auth(req, res);
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.OPENROUTER_API_KEY,
     });
 
-    const response = await openrouter.imageGeneration.create({
+    const response = await openrouter.completions[0].create({
       prompt: prompt,
       model: model,
     });

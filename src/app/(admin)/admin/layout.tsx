@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { validateAdminSession } from "@/lib/auth";
+import { verifyAdminSession } from "@/lib/auth";
 import AdminHeader from "./header";
 
 export default async function AdminLayout({
@@ -10,14 +10,14 @@ export default async function AdminLayout({
 }) {
   // Check if admin is authenticated by verifying the session token
   const cookieStore = await cookies();
-  const token = cookieStore.get("admin_token");
-
-  let isAuthenticated = false;
-  if (token?.value) {
-    isAuthenticated = await validateAdminSession(token.value);
+  const token = cookieStore.get("admin_token")?.value;
+  if (!token) {
+    // Redirect to admin login
+    redirect("/login");
   }
 
-  if (!isAuthenticated) {
+  const session = await verifyAdminSession(token);
+  if (!session) {
     // Redirect to admin login
     redirect("/login");
   }

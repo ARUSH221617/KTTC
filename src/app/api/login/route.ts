@@ -31,10 +31,10 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: { id: user.id, email: user.email } // Don't return sensitive info like password
+      user: { id: user.id, email: user.email, role: user.role } // Include role in response
     });
 
-    // Create a secure admin session
+    // Create a secure admin session with JWT
     const sessionToken = await createAdminSession(user.id, user.email);
 
     // Store the session token in a secure cookie

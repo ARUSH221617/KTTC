@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { OpenRouter } from "@openrouter/sdk";
+import { NextApiRequest, NextApiResponse } from "next";
 
-export async function GET(req: NextRequest) {
-  const session = await auth();
+export async function GET(req: NextApiRequest, res: NextApiResponse) {
+  const session = await auth(req, res);
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

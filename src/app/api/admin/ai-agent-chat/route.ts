@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { OpenRouter } from "@openrouter/sdk";
 
-export async function POST(req: NextRequest) {
-  const session = await auth();
+export async function POST(req: any|NextRequest, res: any|NextResponse) {
+  const session = await auth(req, res);
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.OPENROUTER_API_KEY,
     });
 
-    const completion = await openrouter.chat.completions.create({
+    const completion = await openrouter.chat.send({
       model: model,
       messages: messages,
     });
