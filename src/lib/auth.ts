@@ -55,6 +55,14 @@ export async function verifyAdminSession(token: string): Promise<{ id: string; e
   }
 }
 
+// Alias verifyAdminSession as validateAdminSession for compatibility
+export const validateAdminSession = verifyAdminSession;
+
+// No-op for clearAdminSession since we use stateless JWTs
+export function clearAdminSession() {
+  // No server-side state to clear
+}
+
 export const {
   handlers: { GET, POST },
   auth,
