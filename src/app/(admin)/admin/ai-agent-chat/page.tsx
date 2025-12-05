@@ -1,12 +1,11 @@
 "use client";
+
 import { useState } from "react";
 import MessageList, { Message } from "@/components/admin/ai-agent-chat/message-list";
-import ChatInput from "@/components/admin/ai-agent-chat/chat-input";
-import { Settings } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import SettingsSheet from "@/components/admin/ai-agent-chat/settings-sheet";
 import { useToast } from "@/hooks/use-toast";
+import { InputArea } from "@/components/admin/ai-agent-chat/chat-input";
+import React from "react";
 
 export default function AIAgentChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -121,28 +120,21 @@ export default function AIAgentChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h1 className="text-xl font-semibold">AI Agent Chat</h1>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsSettingsOpen(true)}
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
-      </div>
+    <div className="flex flex-col flex-1 overflow-hidden justify-between h-full w-full relative">
       <MessageList messages={messages} />
       {isLoading && (
         <div className="p-4 text-center text-sm text-muted-foreground">
           AI is working...
         </div>
       )}
-      <Separator />
-      <ChatInput
-        input={input}
-        setInput={setInput}
-        handleSendMessage={handleSendMessage}
+      <InputArea
+        isLoading={isLoading}
+        isThinking={false}
+        onChange={setInput}
+        onSend={handleSendMessage}
+        onToggleThinking={() => {}}
+        value={input}
+        setIsSettingsOpen={setIsSettingsOpen}
       />
       <SettingsSheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </div>

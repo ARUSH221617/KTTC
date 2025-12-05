@@ -23,9 +23,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative bg-gray-50">
       <AdminHeader />
-      <div className="py-6">{children}</div>
+      {children}
     </div>
   );
 }
