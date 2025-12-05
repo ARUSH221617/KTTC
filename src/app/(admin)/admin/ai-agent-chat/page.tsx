@@ -5,8 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import SettingsSheet from "@/components/admin/ai-agent-chat/settings-sheet";
 import { InputArea } from "@/components/admin/ai-agent-chat/chat-input";
 import { MessageList } from "@/components/admin/ai-agent-chat/message-list";
-import { Button } from "@/components/ui/button";
-import { Settings2 } from "lucide-react";
 
 export interface Message {
   id: string;
@@ -15,11 +13,19 @@ export interface Message {
   image?: string;
 }
 
+interface Model {
+  id: string;
+  name: string;
+}
+
 export default function AIAgentChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState(""); // Managed state for the rolled-back input
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [models, setModels] = useState<Model[]>([]);
+  const [chatModel, setChatModel] = useState<string>("");
+
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -27,6 +33,32 @@ export default function AIAgentChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Fetch models and load settings on mount
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const res = await fetch("/api/admin/ai-agent-chat/models");
+        const data = await res.json();
+        if (res.ok) {
+          setModels(data.models.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch models", error);
+      }
+    };
+    fetchModels();
+
+    const savedModel = localStorage.getItem("ai-chat-model");
+    if (savedModel) {
+      setChatModel(savedModel);
+    }
+  }, []);
+
+  const handleModelChange = (modelId: string) => {
+    setChatModel(modelId);
+    localStorage.setItem("ai-chat-model", modelId);
+  };
 
   const handleSendMessage = async () => {
     if (!input.trim() && !isLoading) return;
@@ -64,11 +96,13 @@ export default function AIAgentChatPage() {
   };
 
   const handleChatCompletion = async (currentMessages: Message[]) => {
-    const chatModel = localStorage.getItem("ai-chat-model");
-    if (!chatModel) {
+    // Use state if available, fallback to localStorage
+    const currentModel = chatModel || localStorage.getItem("ai-chat-model");
+
+    if (!currentModel) {
       toast({
         title: "Configuration Missing",
-        description: "Please select a chat model in the settings.",
+        description: "Please select a chat model.",
         variant: "destructive",
       });
       return;
@@ -85,7 +119,7 @@ export default function AIAgentChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: apiMessages,
-          model: chatModel,
+          model: currentModel,
         }),
       });
 
@@ -164,9 +198,10 @@ export default function AIAgentChatPage() {
           onChange={setInput}
           onSend={handleSendMessage}
           isLoading={isLoading}
-          isThinking={false}
-          onToggleThinking={() => {}}
           setIsSettingsOpen={setIsSettingsOpen}
+          models={models}
+          selectedModel={chatModel}
+          onModelChange={handleModelChange}
         />
         <p className="text-[10px] text-center text-muted-foreground mt-2">
           AI can make mistakes. Please verify important information.

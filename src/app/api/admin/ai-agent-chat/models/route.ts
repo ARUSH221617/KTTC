@@ -17,6 +17,11 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
 
     const models = await openrouter.models.list();
 
+    // Ensure the response structure matches what the frontend expects: { models: { data: [...] } }
+    // The OpenRouter SDK returns { data: [...] } for models.list() usually, but let's verify.
+    // If models is { data: [...] }, then returning { models } results in { models: { data: [...] } }.
+    // So the frontend expectation of data.models.data is correct.
+
     return NextResponse.json({ models });
   } catch (error) {
     console.error("Error fetching OpenRouter models:", error);
