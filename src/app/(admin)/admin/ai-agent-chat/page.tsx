@@ -1,41 +1,73 @@
 "use client";
 
-import { useState } from "react";
-import MessageList, { Message } from "@/components/admin/ai-agent-chat/message-list";
-import SettingsSheet from "@/components/admin/ai-agent-chat/settings-sheet";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import SettingsSheet from "@/components/admin/ai-agent-chat/settings-sheet";
 import { InputArea } from "@/components/admin/ai-agent-chat/chat-input";
-import React from "react";
+import { MessageList } from "@/components/admin/ai-agent-chat/message-list";
+import { Button } from "@/components/ui/button";
+import { Settings2 } from "lucide-react";
+
+export interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  image?: string;
+}
 
 export default function AIAgentChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [input, setInput] = useState(""); // Managed state for the rolled-back input
   const [isLoading, setIsLoading] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSendMessage = async () => {
-    if (input.trim() && !isLoading) {
-      const newMessages = [...messages, { text: input, sender: "user" }];
-      setMessages(newMessages);
-      setInput("");
-      setIsLoading(true);
+    if (!input.trim() && !isLoading) return;
 
-      if (input.startsWith("/imagine ")) {
-        await handleImageGeneration(input.substring(8).trim());
+    const content = input;
+    setInput(""); // Clear input immediately
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content,
+    };
+
+    const newMessages = [...messages, newMessage];
+    setMessages(newMessages);
+    setIsLoading(true);
+
+    try {
+      if (content.startsWith("/imagine ")) {
+        await handleImageGeneration(content.substring(9).trim());
       } else {
         await handleChatCompletion(newMessages);
       }
-
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setInput(content); // Restore input on error
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChatCompletion = async (newMessages: any[]) => {
+  const handleChatCompletion = async (currentMessages: Message[]) => {
     const chatModel = localStorage.getItem("ai-chat-model");
     if (!chatModel) {
       toast({
-        title: "No chat model selected",
+        title: "Configuration Missing",
         description: "Please select a chat model in the settings.",
         variant: "destructive",
       });
@@ -43,14 +75,16 @@ export default function AIAgentChatPage() {
     }
 
     try {
+      const apiMessages = currentMessages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
       const res = await fetch("/api/admin/ai-agent-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages.map((m) => ({
-            role: m.sender === "user" ? "user" : "assistant",
-            content: m.text,
-          })),
+          messages: apiMessages,
           model: chatModel,
         }),
       });
@@ -58,23 +92,19 @@ export default function AIAgentChatPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessages([
-          ...newMessages,
-          { text: data.response, sender: "assistant" },
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: data.response,
+          },
         ]);
       } else {
-        toast({
-          title: "Error from AI",
-          description: data.error || "An unexpected error occurred.",
-          variant: "destructive",
-        });
+        throw new Error(data.error || "Failed to get response");
       }
     } catch (error) {
-      toast({
-        title: "Error sending message",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
+      throw error;
     }
   };
 
@@ -82,8 +112,8 @@ export default function AIAgentChatPage() {
     const imageModel = localStorage.getItem("ai-image-model");
     if (!imageModel) {
       toast({
-        title: "No image model selected",
-        description: "Please select an image model in the settings.",
+        title: "Configuration Missing",
+        description: "Please select an image model in settings.",
         variant: "destructive",
       });
       return;
@@ -101,41 +131,48 @@ export default function AIAgentChatPage() {
       if (res.ok) {
         setMessages((prev) => [
           ...prev,
-          { text: data.imageUrl, sender: "assistant", type: "image" },
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `Generated image for: "${prompt}"`,
+            image: data.imageUrl,
+          },
         ]);
       } else {
-        toast({
-          title: "Error generating image",
-          description: data.error || "An unexpected error occurred.",
-          variant: "destructive",
-        });
+        throw new Error(data.error || "Failed to generate image");
       }
     } catch (error) {
-      toast({
-        title: "Error generating image",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
+      throw error;
     }
   };
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden justify-between h-full w-full relative">
-      <MessageList messages={messages} />
-      {isLoading && (
-        <div className="p-4 text-center text-sm text-muted-foreground">
-          AI is working...
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="max-w-3xl mx-auto flex flex-col min-h-full">
+          <MessageList messages={messages} isLoading={isLoading} />
+          <div ref={messagesEndRef} className="h-4" />
         </div>
-      )}
-      <InputArea
-        isLoading={isLoading}
-        isThinking={false}
-        onChange={setInput}
-        onSend={handleSendMessage}
-        onToggleThinking={() => {}}
-        value={input}
-        setIsSettingsOpen={setIsSettingsOpen}
-      />
+      </div>
+
+      {/* Input Area - Fixed at Bottom */}
+      <div className="p-4 bg-background">
+        <InputArea
+          value={input}
+          onChange={setInput}
+          onSend={handleSendMessage}
+          isLoading={isLoading}
+          isThinking={false}
+          onToggleThinking={() => {}}
+          setIsSettingsOpen={setIsSettingsOpen}
+        />
+        <p className="text-[10px] text-center text-muted-foreground mt-2">
+          AI can make mistakes. Please verify important information.
+        </p>
+      </div>
+
       <SettingsSheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </div>
   );

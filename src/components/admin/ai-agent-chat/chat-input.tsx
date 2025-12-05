@@ -14,8 +14,8 @@ interface InputAreaProps {
   value: string;
   onChange: (val: string) => void;
   onSend: () => void;
-  isThinking: boolean;
-  onToggleThinking: () => void;
+  isThinking?: boolean;
+  onToggleThinking?: () => void;
   isLoading: boolean;
   setIsSettingsOpen: (open: boolean) => void;
 }
@@ -24,10 +24,10 @@ export const InputArea: React.FC<InputAreaProps> = ({
   value,
   onChange,
   onSend,
-  isThinking,
-  onToggleThinking,
+  isThinking = false,
+  onToggleThinking = () => {},
   isLoading,
-  setIsSettingsOpen
+  setIsSettingsOpen,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -51,38 +51,40 @@ export const InputArea: React.FC<InputAreaProps> = ({
 
   return (
     <div className="w-full max-w-3xl mx-auto relative group">
-      <div className="relative bg-[#1E1F20] rounded-[28px] border border-transparent focus-within:border-gray-600 transition-all duration-200">
+      {/* Changed bg-[#1E1F20] to bg-muted/50 and added border for better contrast in light mode */}
+      <div className="relative bg-muted/50 dark:bg-[#1E1F20] rounded-[28px] border border-border/50 focus-within:border-primary/50 transition-all duration-200 shadow-sm">
         {/* Text Area */}
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask Gemini"
-          className="w-full bg-transparent text-gemini-text placeholder-[#444746] px-6 py-4 outline-none resize-none min-h-14 max-h-[200px] rounded-[28px]"
+          placeholder="Ask the AI Agent..."
+          className="w-full bg-transparent text-foreground placeholder:text-muted-foreground px-6 py-4 outline-none resize-none min-h-14 max-h-[200px] rounded-[28px] text-base"
           rows={1}
+          disabled={isLoading}
         />
 
         {/* Action Bar inside Input */}
         <div className="flex items-center justify-between px-4 pb-3">
           <div className="flex items-center gap-2">
             <button
-              className="p-2 rounded-full hover:bg-[#2D2E2F] text-gemini-text transition-colors"
+              className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Add attachment"
             >
-              <PlusIcon />
+              <PlusIcon className="w-5 h-5" />
             </button>
 
             <button
-              className="p-2 rounded-full hover:bg-[#2D2E2F] text-gemini-text transition-colors"
+              className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Settings"
               onClick={() => setIsSettingsOpen(true)}
             >
-              <Settings />
+              <Settings className="w-5 h-5" />
             </button>
 
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-[#2D2E2F] text-gemini-subtext text-sm transition-colors border border-transparent hover:border-[#444746]/50">
-              <ToolsIcon />
+            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground text-sm transition-colors border border-transparent hover:border-border">
+              <ToolsIcon className="w-4 h-4" />
               <span>Tools</span>
             </button>
           </div>
@@ -92,29 +94,29 @@ export const InputArea: React.FC<InputAreaProps> = ({
               onClick={onToggleThinking}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors border ${
                 isThinking
-                  ? "bg-[#2D2E2F] text-blue-300 border-[#444746]"
-                  : "text-gemini-subtext hover:bg-[#2D2E2F] border-transparent"
+                  ? "bg-muted text-primary border-border"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
               }`}
             >
               <span>Thinking</span>
-              <ChevronDownIcon />
+              <ChevronDownIcon className="w-4 h-4" />
             </button>
 
             {value.trim() ? (
               <button
                 onClick={onSend}
                 disabled={isLoading}
-                className={`p-2 rounded-full ${
+                className={`p-2 rounded-full transition-colors ${
                   isLoading
-                    ? "opacity-50"
-                    : "hover:bg-[#2D2E2F] text-gemini-text"
-                } transition-colors`}
+                    ? "opacity-50 cursor-not-allowed text-muted-foreground"
+                    : "bg-primary text-primary-foreground hover:opacity-90"
+                }`}
               >
-                <SendIcon />
+                <SendIcon className="w-5 h-5" />
               </button>
             ) : (
-              <button className="p-2 rounded-full hover:bg-[#2D2E2F] text-gemini-text transition-colors">
-                <MicIcon />
+              <button className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                <MicIcon className="w-5 h-5" />
               </button>
             )}
           </div>
