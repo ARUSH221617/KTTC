@@ -4,7 +4,7 @@ import { Bot, User } from "lucide-react";
 import { Message } from "@/app/(admin)/admin/ai-agent-chat/page";
 import Image from "next/image";
 // Note: If you have a markdown renderer, import it here. For now, we'll render text directly.
-// import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from "react-markdown";
 
 interface MessageListProps {
   messages: Message[];
@@ -87,14 +87,17 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                     : "bg-white dark:bg-muted/30 border text-foreground rounded-tl-sm"
                 )}
               >
-                {message.content}
+                <ReactMarkdown>{message.content}</ReactMarkdown>
               </div>
             )}
 
             {/* Timestamp or Meta (Optional) */}
-            {/* <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-              {new Date(parseInt(message.id)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-            </span> */}
+            <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+              {new Date(parseInt(message.id)).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
           </div>
         </div>
       ))}
