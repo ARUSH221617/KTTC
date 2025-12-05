@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         level,
         duration,
         instructor: { connect: { id: instructorId } },
-        thumbnail: thumbnail || null,
+        thumbnail: thumbnail ?? "",
         price,
       },
     });
