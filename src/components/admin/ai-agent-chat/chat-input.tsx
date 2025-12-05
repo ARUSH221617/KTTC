@@ -17,6 +17,7 @@ import {
   Award,
   MessageSquare,
   Mail,
+  Palette,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -169,6 +170,34 @@ export const InputArea: React.FC<InputAreaProps> = ({
     onChange(value + `\n![Image](${url})\n`);
   };
 
+  const handleToolSelect = (tool: string) => {
+    let prefix = "";
+    switch (tool) {
+      case "image":
+        prefix = "/imagine ";
+        break;
+      case "canvas":
+        prefix = "/canvas ";
+        break;
+      case "search":
+        prefix = "/search ";
+        break;
+    }
+
+    if (prefix) {
+      if (value.startsWith("/")) {
+        const existingCommandMatch = value.match(/^\/\w+\s?/);
+        if (existingCommandMatch) {
+          onChange(prefix + value.substring(existingCommandMatch[0].length));
+        } else {
+          onChange(prefix + value);
+        }
+      } else {
+        onChange(prefix + value);
+      }
+    }
+  };
+
   const selectedModelName = models.find((m) => m.id === selectedModel)?.name || "Select Model";
 
   const filteredModels = models.filter((model) =>
@@ -244,10 +273,30 @@ export const InputArea: React.FC<InputAreaProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground text-sm transition-colors border border-transparent hover:border-border">
-              <ToolsIcon className="w-4 h-4" />
-              <span>Tools</span>
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground text-sm transition-colors border border-transparent hover:border-border">
+                  <ToolsIcon className="w-4 h-4" />
+                  <span>Tools</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuLabel>Select Tool</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleToolSelect("image")}>
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  <span>Generate Image</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToolSelect("canvas")}>
+                  <Palette className="mr-2 h-4 w-4" />
+                  <span>Canvas</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToolSelect("search")}>
+                  <Search className="mr-2 h-4 w-4" />
+                  <span>Search</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex items-center gap-2">
