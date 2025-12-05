@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   PlusIcon,
   MicIcon,
@@ -8,28 +8,110 @@ import {
   ChevronDownIcon,
   SendIcon,
   Settings,
+  StopCircleIcon,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+
+interface Model {
+  id: string;
+  name: string;
+}
 
 interface InputAreaProps {
   value: string;
   onChange: (val: string) => void;
   onSend: () => void;
-  isThinking?: boolean;
-  onToggleThinking?: () => void;
   isLoading: boolean;
   setIsSettingsOpen: (open: boolean) => void;
+  models: Model[];
+  selectedModel: string;
+  onModelChange: (modelId: string) => void;
 }
 
 export const InputArea: React.FC<InputAreaProps> = ({
   value,
   onChange,
   onSend,
-  isThinking = false,
-  onToggleThinking = () => {},
   isLoading,
   setIsSettingsOpen,
+  models,
+  selectedModel,
+  onModelChange,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Refs to keep track of latest values without triggering re-initialization of SpeechRecognition
+  const valueRef = useRef(value);
+  const onChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Initialize SpeechRecognition
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          let finalTranscript = "";
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            }
+          }
+
+          if (finalTranscript) {
+             const currentValue = valueRef.current;
+             const newValue = currentValue + (currentValue && !currentValue.endsWith(' ') ? ' ' : '') + finalTranscript;
+             onChangeRef.current(newValue);
+          }
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error("Speech recognition error", event.error);
+          setIsRecording(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsRecording(false);
+        };
+      }
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    } else {
+      if (recognitionRef.current) {
+        recognitionRef.current.start();
+        setIsRecording(true);
+      } else {
+        alert("Speech recognition is not supported in this browser.");
+      }
+    }
+  };
+
 
   // Auto-resize textarea
   useEffect(() => {
@@ -49,17 +131,22 @@ export const InputArea: React.FC<InputAreaProps> = ({
     }
   };
 
+  const selectedModelName = models.find((m) => m.id === selectedModel)?.name || "Select Model";
+
   return (
     <div className="w-full max-w-3xl mx-auto relative group">
       {/* Changed bg-[#1E1F20] to bg-muted/50 and added border for better contrast in light mode */}
-      <div className="relative bg-muted/50 dark:bg-[#1E1F20] rounded-[28px] border border-border/50 focus-within:border-primary/50 transition-all duration-200 shadow-sm">
+      <div className={cn(
+        "relative bg-muted/50 dark:bg-[#1E1F20] rounded-[28px] border border-border/50 focus-within:border-primary/50 transition-all duration-200 shadow-sm",
+        isRecording && "border-red-500/50 ring-1 ring-red-500/20"
+      )}>
         {/* Text Area */}
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask the AI Agent..."
+          placeholder={isRecording ? "Listening..." : "Ask the AI Agent..."}
           className="w-full bg-transparent text-foreground placeholder:text-muted-foreground px-6 py-4 outline-none resize-none min-h-14 max-h-[200px] rounded-[28px] text-base"
           rows={1}
           disabled={isLoading}
@@ -90,19 +177,37 @@ export const InputArea: React.FC<InputAreaProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={onToggleThinking}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors border ${
-                isThinking
-                  ? "bg-muted text-primary border-border"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
-              }`}
-            >
-              <span>Thinking</span>
-              <ChevronDownIcon className="w-4 h-4" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors border text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
+                >
+                  <span className="max-w-[100px] truncate">{selectedModelName}</span>
+                  <ChevronDownIcon className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                {models.map((model) => (
+                  <DropdownMenuItem
+                    key={model.id}
+                    onClick={() => onModelChange(model.id)}
+                    className="cursor-pointer"
+                  >
+                    {model.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            {value.trim() ? (
+            {isRecording ? (
+               <button
+                onClick={toggleRecording}
+                className="p-2 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors animate-pulse"
+                title="Stop recording"
+              >
+                <StopCircleIcon className="w-5 h-5" />
+              </button>
+            ) : value.trim() ? (
               <button
                 onClick={onSend}
                 disabled={isLoading}
@@ -115,7 +220,11 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 <SendIcon className="w-5 h-5" />
               </button>
             ) : (
-              <button className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <button
+                onClick={toggleRecording}
+                className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Start voice dictation"
+              >
                 <MicIcon className="w-5 h-5" />
               </button>
             )}
