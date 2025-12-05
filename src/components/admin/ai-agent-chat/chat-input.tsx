@@ -10,15 +10,26 @@ import {
   Settings,
   StopCircleIcon,
   Search,
+  Upload,
+  Image as ImageIcon,
+  BookOpen,
+  User,
+  Award,
+  MessageSquare,
+  Mail,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { MediaPicker } from "@/components/admin/media-picker";
+import { ReferencePicker, ReferenceType } from "@/components/admin/ai-agent-chat/reference-picker";
 
 interface Model {
   id: string;
@@ -50,6 +61,11 @@ export const InputArea: React.FC<InputAreaProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Pickers State
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [referenceType, setReferenceType] = useState<ReferenceType | null>(null);
+  const [isReferencePickerOpen, setIsReferencePickerOpen] = useState(false);
 
   // Refs to keep track of latest values without triggering re-initialization of SpeechRecognition
   const valueRef = useRef(value);
@@ -134,6 +150,27 @@ export const InputArea: React.FC<InputAreaProps> = ({
     }
   };
 
+  const handleOpenReference = (type: ReferenceType) => {
+    setReferenceType(type);
+    setIsReferencePickerOpen(true);
+  };
+
+  const handleReferenceSelect = (selectedItems: any[]) => {
+    if (selectedItems.length === 0) return;
+
+    let textToAppend = "\n\nContext:\n";
+    selectedItems.forEach(item => {
+      textToAppend += `- ${JSON.stringify(item)}\n`;
+    });
+
+    onChange(value + textToAppend);
+  };
+
+  const handleMediaSelect = (url: string) => {
+    // Append markdown image syntax
+    onChange(value + `\n![Image](${url})\n`);
+  };
+
   const selectedModelName = models.find((m) => m.id === selectedModel)?.name || "Select Model";
 
   const filteredModels = models.filter((model) =>
@@ -162,12 +199,52 @@ export const InputArea: React.FC<InputAreaProps> = ({
         {/* Action Bar inside Input */}
         <div className="flex items-center justify-between px-4 pb-3">
           <div className="flex items-center gap-2">
-            <button
-              className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title="Add attachment"
-            >
-              <PlusIcon className="w-5 h-5" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title="Add attachment"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel>Add to Context</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem onClick={() => setIsMediaPickerOpen(true)}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  <span>Upload / Select Media</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem onClick={() => handleOpenReference("course")}>
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  <span>Reference Course</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => handleOpenReference("contact")}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  <span>Reference Contact</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => handleOpenReference("certificate")}>
+                  <Award className="mr-2 h-4 w-4" />
+                  <span>Reference Certificate</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => handleOpenReference("user")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Reference User</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => handleOpenReference("testimonial")}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <span>Reference Testimonial</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <button
               className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -263,6 +340,21 @@ export const InputArea: React.FC<InputAreaProps> = ({
           </div>
         </div>
       </div>
+
+      <MediaPicker
+        open={isMediaPickerOpen}
+        onOpenChange={setIsMediaPickerOpen}
+        onSelect={handleMediaSelect}
+      />
+
+      {referenceType && (
+        <ReferencePicker
+          type={referenceType}
+          open={isReferencePickerOpen}
+          onOpenChange={setIsReferencePickerOpen}
+          onSelect={handleReferenceSelect}
+        />
+      )}
     </div>
   );
 };
