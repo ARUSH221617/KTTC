@@ -9,6 +9,7 @@ import {
   SendIcon,
   Settings,
   StopCircleIcon,
+  Search,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface Model {
@@ -46,6 +48,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   // Refs to keep track of latest values without triggering re-initialization of SpeechRecognition
@@ -133,6 +136,10 @@ export const InputArea: React.FC<InputAreaProps> = ({
 
   const selectedModelName = models.find((m) => m.id === selectedModel)?.name || "Select Model";
 
+  const filteredModels = models.filter((model) =>
+    model.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="w-full max-w-3xl mx-auto relative group">
       {/* Changed bg-[#1E1F20] to bg-muted/50 and added border for better contrast in light mode */}
@@ -177,7 +184,9 @@ export const InputArea: React.FC<InputAreaProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <DropdownMenu>
+            <DropdownMenu onOpenChange={(open) => {
+              if (!open) setSearchQuery("");
+            }}>
               <DropdownMenuTrigger asChild>
                 <button
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors border text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
@@ -186,16 +195,39 @@ export const InputArea: React.FC<InputAreaProps> = ({
                   <ChevronDownIcon className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
-                {models.map((model) => (
-                  <DropdownMenuItem
-                    key={model.id}
-                    onClick={() => onModelChange(model.id)}
-                    className="cursor-pointer"
-                  >
-                    {model.name}
-                  </DropdownMenuItem>
-                ))}
+              <DropdownMenuContent align="end" className="w-[260px]">
+                <div className="p-2 sticky top-0 bg-popover z-10 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search models..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-8 h-9"
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto p-1">
+                  {filteredModels.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      No models found
+                    </div>
+                  ) : (
+                    filteredModels.map((model) => (
+                      <DropdownMenuItem
+                        key={model.id}
+                        onClick={() => {
+                          onModelChange(model.id);
+                          setSearchQuery("");
+                        }}
+                        className="cursor-pointer"
+                      >
+                        {model.name}
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
