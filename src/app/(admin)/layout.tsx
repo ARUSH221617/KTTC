@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { Sidebar } from "@/components/admin/sidebar";
-import { MobileNav } from "@/components/admin/mobile-nav";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,24 +55,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
-        <div className="flex min-h-screen">
-            {/* Desktop Sidebar */}
-            <div className="hidden md:flex w-64 flex-col fixed inset-y-0 z-50">
-               <Sidebar />
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1 md:pl-64 flex flex-col">
-                 <header className="md:hidden flex items-center h-16 border-b px-4 shrink-0 bg-background">
-                    <MobileNav />
-                    <div className="ml-4 font-semibold">KTTC Admin</div>
-                 </header>
-                 <main className="flex-1 overflow-y-auto">
-                    {children}
-                 </main>
-            </div>
-        </div>
-        <Toaster />
+        <TooltipProvider>
+          <AdminShell>
+              {children}
+          </AdminShell>
+          <Toaster />
+        </TooltipProvider>
       </body>
     </html>
   );
