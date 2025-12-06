@@ -4,6 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { InputArea } from "@/components/admin/ai-agent-chat/chat-input";
 import { MessageList } from "@/components/admin/ai-agent-chat/message-list";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { CanvasView } from "@/components/admin/ai-agent-chat/canvas-view";
 
 export interface Message {
   id: string;
@@ -23,6 +29,10 @@ export default function AIAgentChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
   const [chatModel, setChatModel] = useState<string>("");
+
+  // Canvas State
+  const [isCanvasOpen, setIsCanvasOpen] = useState(false);
+  const [canvasContent, setCanvasContent] = useState("");
 
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -78,7 +88,11 @@ export default function AIAgentChatPage() {
       if (content.startsWith("/imagine ")) {
         await handleImageGeneration(content.substring(9).trim());
       } else {
-        await handleChatCompletion(newMessages);
+        const isCanvas = content.startsWith("/canvas ");
+        if (isCanvas) {
+          setIsCanvasOpen(true);
+        }
+        await handleChatCompletion(newMessages, isCanvas);
       }
     } catch (error) {
       console.error(error);
@@ -93,7 +107,7 @@ export default function AIAgentChatPage() {
     }
   };
 
-  const handleChatCompletion = async (currentMessages: Message[]) => {
+  const handleChatCompletion = async (currentMessages: Message[], updateCanvas = false) => {
     // Use state if available, fallback to localStorage
     const currentModel = chatModel || localStorage.getItem("ai-chat-model");
 
@@ -124,6 +138,9 @@ export default function AIAgentChatPage() {
       const data = await res.json();
 
       if (res.ok) {
+        if (updateCanvas) {
+          setCanvasContent(data.response);
+        }
         setMessages((prev) => [
           ...prev,
           {
@@ -179,31 +196,49 @@ export default function AIAgentChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+    <div className="h-[calc(100vh-4rem)] bg-background overflow-hidden">
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel defaultSize={isCanvasOpen ? 50 : 100} minSize={30}>
+          <div className="flex flex-col h-full bg-background">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              <div className="max-w-3xl mx-auto flex flex-col min-h-full">
+                <MessageList messages={messages} isLoading={isLoading} />
+                <div ref={messagesEndRef} className="h-4" />
+              </div>
+            </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6">
-        <div className="max-w-3xl mx-auto flex flex-col min-h-full">
-          <MessageList messages={messages} isLoading={isLoading} />
-          <div ref={messagesEndRef} className="h-4" />
-        </div>
-      </div>
+            {/* Input Area - Fixed at Bottom */}
+            <div className="p-4 bg-background border-t">
+              <InputArea
+                value={input}
+                onChange={setInput}
+                onSend={handleSendMessage}
+                isLoading={isLoading}
+                models={models}
+                selectedModel={chatModel}
+                onModelChange={handleModelChange}
+              />
+              <p className="text-[10px] text-center text-muted-foreground mt-2">
+                AI can make mistakes. Please verify important information.
+              </p>
+            </div>
+          </div>
+        </ResizablePanel>
 
-      {/* Input Area - Fixed at Bottom */}
-      <div className="p-4 bg-background">
-        <InputArea
-          value={input}
-          onChange={setInput}
-          onSend={handleSendMessage}
-          isLoading={isLoading}
-          models={models}
-          selectedModel={chatModel}
-          onModelChange={handleModelChange}
-        />
-        <p className="text-[10px] text-center text-muted-foreground mt-2">
-          AI can make mistakes. Please verify important information.
-        </p>
-      </div>
+        {isCanvasOpen && (
+          <>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={50} minSize={30}>
+              <CanvasView
+                content={canvasContent}
+                onChange={setCanvasContent}
+                onClose={() => setIsCanvasOpen(false)}
+              />
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
     </div>
   );
 }
