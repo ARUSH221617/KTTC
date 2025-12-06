@@ -69,12 +69,14 @@ export default function AIAgentChatPage() {
   });
 
   const handleSendMessage = async () => {
-    if (!input.trim() && !isLoading) return;
+    // Ensure input is a string before trimming
+    const safeInput = input || "";
+    if (!safeInput.trim() && !isLoading) return;
     if (!chatModel) {
         toast({ title: "Select a model", variant: "destructive" });
         return;
     }
-    await append({ role: 'user', content: input });
+    await append({ role: 'user', content: safeInput });
   };
 
   return (
@@ -96,7 +98,7 @@ export default function AIAgentChatPage() {
       <div className="absolute bottom-0 left-0 w-full p-4 bg-background border-t z-10">
         <div className="max-w-3xl mx-auto">
             <InputArea
-            value={input}
+            value={input || ""}
             onChange={setInput}
             onSend={handleSendMessage}
             isLoading={isLoading}
@@ -112,7 +114,7 @@ export default function AIAgentChatPage() {
 
       <Artifact
         chatId="session-1"
-        input={input}
+        input={input || ""}
         setInput={setInput}
         status={isLoading ? 'streaming' : 'idle'} // Map status
         stop={stop}

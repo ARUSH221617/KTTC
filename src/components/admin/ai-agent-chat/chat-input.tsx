@@ -162,12 +162,12 @@ export const InputArea: React.FC<InputAreaProps> = ({
       textToAppend += `- ${JSON.stringify(item)}\n`;
     });
 
-    onChange(value + textToAppend);
+    onChange((value || "") + textToAppend);
   };
 
   const handleMediaSelect = (url: string) => {
     // Append markdown image syntax
-    onChange(value + `\n![Image](${url})\n`);
+    onChange((value || "") + `\n![Image](${url})\n`);
   };
 
   const handleToolSelect = (tool: string) => {
@@ -184,16 +184,19 @@ export const InputArea: React.FC<InputAreaProps> = ({
         break;
     }
 
+    // Safely handle potentially undefined value
+    const safeValue = value || "";
+
     if (prefix) {
-      if (value.startsWith("/")) {
-        const existingCommandMatch = value.match(/^\/\w+\s?/);
+      if (safeValue.startsWith("/")) {
+        const existingCommandMatch = safeValue.match(/^\/\w+\s?/);
         if (existingCommandMatch) {
-          onChange(prefix + value.substring(existingCommandMatch[0].length));
+          onChange(prefix + safeValue.substring(existingCommandMatch[0].length));
         } else {
-          onChange(prefix + value);
+          onChange(prefix + safeValue);
         }
       } else {
-        onChange(prefix + value);
+        onChange(prefix + safeValue);
       }
     }
   };
@@ -203,6 +206,8 @@ export const InputArea: React.FC<InputAreaProps> = ({
   const filteredModels = models.filter((model) =>
     model.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const safeValue = value || "";
 
   return (
     <div className="w-full max-w-3xl mx-auto relative group">
@@ -214,7 +219,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
         {/* Text Area */}
         <textarea
           ref={textareaRef}
-          value={value}
+          value={safeValue}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={isRecording ? "Listening..." : "Ask the AI Agent..."}
@@ -355,7 +360,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
               >
                 <StopCircleIcon className="w-5 h-5" />
               </button>
-            ) : value.trim() ? (
+            ) : safeValue.trim() ? (
               <button
                 onClick={onSend}
                 disabled={isLoading}
