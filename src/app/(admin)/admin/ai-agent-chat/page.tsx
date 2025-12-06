@@ -1,22 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { InputArea } from "@/components/admin/ai-agent-chat/chat-input";
 import { MessageList } from "@/components/admin/ai-agent-chat/message-list";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { CanvasView } from "@/components/admin/ai-agent-chat/canvas-view";
-
-export interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  image?: string;
-}
+import { Artifact } from "@/components/admin/ai-agent-chat/artifact";
+import { useChat } from "@ai-sdk/react";
+import { useArtifact } from "@/hooks/use-artifact";
+import { initialArtifactData } from "@/hooks/use-artifact";
 
 interface Model {
   id: string;
@@ -24,25 +15,13 @@ interface Model {
 }
 
 export default function AIAgentChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState(""); // Managed state for the rolled-back input
-  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   const [models, setModels] = useState<Model[]>([]);
   const [chatModel, setChatModel] = useState<string>("");
 
-  // Canvas State
-  const [isCanvasOpen, setIsCanvasOpen] = useState(false);
-  const [canvasContent, setCanvasContent] = useState("");
+  const { artifact, setArtifact } = useArtifact();
 
-  const { toast } = useToast();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Fetch models and load settings on mount
+  // Load models
   useEffect(() => {
     const fetchModels = async () => {
       try {
@@ -58,9 +37,7 @@ export default function AIAgentChatPage() {
     fetchModels();
 
     const savedModel = localStorage.getItem("ai-chat-model");
-    if (savedModel) {
-      setChatModel(savedModel);
-    }
+    if (savedModel) setChatModel(savedModel);
   }, []);
 
   const handleModelChange = (modelId: string) => {
@@ -68,182 +45,82 @@ export default function AIAgentChatPage() {
     localStorage.setItem("ai-chat-model", modelId);
   };
 
+  const { messages, input, setInput, append, isLoading, stop, setMessages, reload } = useChat({
+    api: "/api/admin/ai-agent-chat",
+    body: {
+      model: chatModel,
+    },
+    onToolCall: ({ toolCall }) => {
+        if (toolCall.toolName === 'text_artifact' || toolCall.toolName === 'code_artifact') {
+            const args = toolCall.args as any;
+            setArtifact({
+                ...initialArtifactData,
+                title: args.title,
+                content: args.content,
+                kind: toolCall.toolName === 'code_artifact' ? 'code' : 'text',
+                isVisible: true,
+                status: 'idle'
+            });
+        }
+    },
+    onFinish: (message) => {
+        // Check for tool invocations in final message if needed, but onToolCall should handle it
+    }
+  });
+
   const handleSendMessage = async () => {
     if (!input.trim() && !isLoading) return;
-
-    const content = input;
-    setInput(""); // Clear input immediately
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content,
-    };
-
-    const newMessages = [...messages, newMessage];
-    setMessages(newMessages);
-    setIsLoading(true);
-
-    try {
-      if (content.startsWith("/imagine ")) {
-        await handleImageGeneration(content.substring(9).trim());
-      } else {
-        const isCanvas = content.startsWith("/canvas ");
-        if (isCanvas) {
-          setIsCanvasOpen(true);
-        }
-        await handleChatCompletion(newMessages, isCanvas);
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-      setInput(content); // Restore input on error
-    } finally {
-      setIsLoading(false);
+    if (!chatModel) {
+        toast({ title: "Select a model", variant: "destructive" });
+        return;
     }
-  };
-
-  const handleChatCompletion = async (currentMessages: Message[], updateCanvas = false) => {
-    // Use state if available, fallback to localStorage
-    const currentModel = chatModel || localStorage.getItem("ai-chat-model");
-
-    if (!currentModel) {
-      toast({
-        title: "Configuration Missing",
-        description: "Please select a chat model.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const apiMessages = currentMessages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      const res = await fetch("/api/admin/ai-agent-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: apiMessages,
-          model: currentModel,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        if (data.canvasContent) {
-           setCanvasContent(data.canvasContent);
-           setIsCanvasOpen(true);
-        } else if (updateCanvas) {
-          // If manually triggered /canvas but no tool result, use the response
-          setCanvasContent(data.response);
-        }
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: data.response,
-          },
-        ]);
-      } else {
-        throw new Error(data.error || "Failed to get response");
-      }
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleImageGeneration = async (prompt: string) => {
-    const imageModel = localStorage.getItem("ai-image-model");
-    if (!imageModel) {
-      toast({
-        title: "Configuration Missing",
-        description: "Please select an image model in settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/admin/ai-agent-chat/image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, model: imageModel }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: `Generated image for: "${prompt}"`,
-            image: data.imageUrl,
-          },
-        ]);
-      } else {
-        throw new Error(data.error || "Failed to generate image");
-      }
-    } catch (error) {
-      throw error;
-    }
+    await append({ role: 'user', content: input });
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background overflow-hidden">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={isCanvasOpen ? 50 : 100} minSize={30}>
-          <div className="flex flex-col h-full bg-background">
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6">
-              <div className="max-w-3xl mx-auto flex flex-col min-h-full">
-                <MessageList messages={messages} isLoading={isLoading} />
-                <div ref={messagesEndRef} className="h-4" />
-              </div>
-            </div>
+    <div className="h-[calc(100vh-4rem)] bg-background overflow-hidden flex flex-col relative">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
+        <div className="max-w-3xl mx-auto flex flex-col min-h-full">
+          <MessageList
+            messages={messages.map(m => ({
+                id: m.id,
+                role: m.role as any,
+                content: m.content,
+                // Adapt tool invocations to something visible if needed
+            }))}
+            isLoading={isLoading}
+           />
+        </div>
+      </div>
 
-            {/* Input Area - Fixed at Bottom */}
-            <div className="p-4 bg-background border-t">
-              <InputArea
-                value={input}
-                onChange={setInput}
-                onSend={handleSendMessage}
-                isLoading={isLoading}
-                models={models}
-                selectedModel={chatModel}
-                onModelChange={handleModelChange}
-              />
-              <p className="text-[10px] text-center text-muted-foreground mt-2">
-                AI can make mistakes. Please verify important information.
-              </p>
-            </div>
-          </div>
-        </ResizablePanel>
+      <div className="absolute bottom-0 left-0 w-full p-4 bg-background border-t z-10">
+        <div className="max-w-3xl mx-auto">
+            <InputArea
+            value={input}
+            onChange={setInput}
+            onSend={handleSendMessage}
+            isLoading={isLoading}
+            models={models}
+            selectedModel={chatModel}
+            onModelChange={handleModelChange}
+            />
+            <p className="text-[10px] text-center text-muted-foreground mt-2">
+            AI can make mistakes. Please verify important information.
+            </p>
+        </div>
+      </div>
 
-        {isCanvasOpen && (
-          <>
-            <ResizableHandle />
-            <ResizablePanel defaultSize={50} minSize={30}>
-              <CanvasView
-                content={canvasContent}
-                onChange={setCanvasContent}
-                onClose={() => setIsCanvasOpen(false)}
-              />
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+      <Artifact
+        chatId="session-1"
+        input={input}
+        setInput={setInput}
+        status={isLoading ? 'streaming' : 'idle'} // Map status
+        stop={stop}
+        messages={messages}
+        setMessages={setMessages}
+        sendMessage={append}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
