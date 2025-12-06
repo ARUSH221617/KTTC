@@ -1,3 +1,6 @@
+import { OpenRouter } from "@openrouter/sdk";
+import { db } from "@/lib/db";
+
 export const tools = [
   {
     type: "function",
@@ -16,6 +19,23 @@ export const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "generate_content",
+      description: "Generate text content based on a prompt and save it to the canvas database. Use this when the user asks to write a document, article, or save content to canvas.",
+      parameters: {
+        type: "object",
+        properties: {
+          prompt: {
+            type: "string",
+            description: "The prompt or topic to generate content for",
+          },
+        },
+        required: ["prompt"],
+      },
+    },
+  }
 ];
 
 export async function performSearch(query: string) {
@@ -53,4 +73,48 @@ export async function performSearch(query: string) {
     console.error("Search error:", error);
     return "Error performing search. Please check your network or search provider configuration.";
   }
+}
+
+export async function generateContent(prompt: string, model?: string) {
+    // Use OpenRouter to generate content
+    try {
+        const openrouter = new OpenRouter({
+            apiKey: process.env.OPENROUTER_API_KEY,
+        });
+
+        const completion = await openrouter.chat.send({
+            model: model || "openai/gpt-4o", // Default model if none provided
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a helpful assistant writing content for a document. Write clear, well-structured text based on the user's prompt. Use markdown formatting if appropriate."
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ]
+        });
+
+        const content = completion.choices?.[0]?.message?.content || "";
+
+        if (!content) {
+            throw new Error("No content generated");
+        }
+
+        // Save to DB
+        // We use 'admin' as generic userId since we might not have a real user session or it's an admin tool
+        const canvas = await db.canvas.create({
+            data: {
+                content,
+                prompt,
+                userId: 'admin'
+            }
+        });
+
+        return { content, id: canvas.id };
+    } catch (error) {
+        console.error("Error generating content:", error);
+        throw error;
+    }
 }

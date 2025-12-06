@@ -1,6 +1,25 @@
 /**
  * @jest-environment node
  */
+
+// Mock OpenRouter SDK before importing tools
+jest.mock("@openrouter/sdk", () => ({
+  OpenRouter: class {
+    chat = {
+      send: jest.fn(),
+    };
+  },
+}));
+
+// Mock @/lib/db before importing tools
+jest.mock("@/lib/db", () => ({
+  db: {
+    canvas: {
+      create: jest.fn(),
+    },
+  },
+}));
+
 import { performSearch } from "./tools";
 
 // Mock global fetch

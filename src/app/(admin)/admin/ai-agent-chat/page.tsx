@@ -138,9 +138,14 @@ export default function AIAgentChatPage() {
       const data = await res.json();
 
       if (res.ok) {
-        if (updateCanvas) {
+        if (data.canvasContent) {
+           setCanvasContent(data.canvasContent);
+           setIsCanvasOpen(true);
+        } else if (updateCanvas) {
+          // If manually triggered /canvas but no tool result, use the response
           setCanvasContent(data.response);
         }
+
         setMessages((prev) => [
           ...prev,
           {
