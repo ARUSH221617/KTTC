@@ -1,14 +1,13 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { NextApiRequest, NextApiResponse } from 'next';
 import { userSchema, userUpdateSchema } from '@/lib/validations';
 import bcrypt from 'bcryptjs';
 
-export async function GET(request: NextApiRequest, response: NextApiResponse) {
+export async function GET(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth(request, response);
+    const session = await auth();
     if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -16,7 +15,7 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
       });
     }
 
-    const { searchParams } = new URL(request.url!);
+    const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
@@ -67,10 +66,10 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
   }
 }
 
-export async function POST(request: any, response: any) {
+export async function POST(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth(request, response);
+    const session = await auth();
     if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -119,10 +118,10 @@ export async function POST(request: any, response: any) {
   }
 }
 
-export async function PUT(request: any, response: any) {
+export async function PUT(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth(request, response);
+    const session = await auth();
     if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -169,10 +168,10 @@ export async function PUT(request: any, response: any) {
   }
 }
 
-export async function DELETE(request: NextApiRequest, response: NextApiResponse) {
+export async function DELETE(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth(request, response);
+    const session = await auth();
     if (!session) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -180,7 +179,7 @@ export async function DELETE(request: NextApiRequest, response: NextApiResponse)
       });
     }
 
-    const { searchParams } = new URL(request.url!);
+    const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
