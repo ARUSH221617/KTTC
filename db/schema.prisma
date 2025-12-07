@@ -59,15 +59,6 @@ model Testimonial {
   updatedAt DateTime @updatedAt
 }
 
-model Canvas {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  prompt    String?  @db.Text
-  userId    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Contact {
   id        String   @id @default(cuid())
   name      String

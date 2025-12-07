@@ -14,7 +14,6 @@ import {
   LogOut,
   Settings,
   Image,
-  Bot,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -74,12 +73,6 @@ export function Sidebar({ className, isCollapsed = false, toggleCollapse }: Side
       icon: Image,
       href: "/admin/media",
       active: pathname.startsWith("/admin/media"),
-    },
-    {
-      label: "AI Agent Chat",
-      icon: Bot,
-      href: "/admin/ai-agent-chat",
-      active: pathname.startsWith("/admin/ai-agent-chat"),
     },
   ];
 
