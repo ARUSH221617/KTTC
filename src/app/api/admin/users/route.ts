@@ -1,18 +1,18 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { validateAdminSession } from '@/lib/auth';
+import { cookies } from 'next/headers';
 import { userSchema, userUpdateSchema } from '@/lib/validations';
 import bcrypt from 'bcryptjs';
 
 export async function GET(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth();
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get('admin_token')?.value;
+
+    if (!adminToken || !(await validateAdminSession(adminToken))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -69,12 +69,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth();
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get('admin_token')?.value;
+
+    if (!adminToken || !(await validateAdminSession(adminToken))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -121,12 +120,11 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth();
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get('admin_token')?.value;
+
+    if (!adminToken || !(await validateAdminSession(adminToken))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -171,12 +169,11 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth();
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get('admin_token')?.value;
+
+    if (!adminToken || !(await validateAdminSession(adminToken))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
