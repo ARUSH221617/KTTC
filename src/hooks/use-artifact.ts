@@ -2,23 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import useSWR from "swr";
-
-export type ArtifactKind = "text" | "code" | "image" | "sheet";
-
-export type UIArtifact = {
-  title: string;
-  documentId: string;
-  kind: ArtifactKind;
-  content: string;
-  isVisible: boolean;
-  status: "streaming" | "idle";
-  boundingBox: {
-    top: number;
-    left: number;
-    width: number;
-    height: number;
-  };
-};
+import type { UIArtifact } from "@/components/agent/artifact";
 
 export const initialArtifactData: UIArtifact = {
   documentId: "init",
@@ -34,6 +18,23 @@ export const initialArtifactData: UIArtifact = {
     height: 0,
   },
 };
+
+type Selector<T> = (state: UIArtifact) => T;
+
+export function useArtifactSelector<Selected>(selector: Selector<Selected>) {
+  const { data: localArtifact } = useSWR<UIArtifact>("artifact", null, {
+    fallbackData: initialArtifactData,
+  });
+
+  const selectedValue = useMemo(() => {
+    if (!localArtifact) {
+      return selector(initialArtifactData);
+    }
+    return selector(localArtifact);
+  }, [localArtifact, selector]);
+
+  return selectedValue;
+}
 
 export function useArtifact() {
   const { data: localArtifact, mutate: setLocalArtifact } = useSWR<UIArtifact>(
@@ -66,11 +67,23 @@ export function useArtifact() {
     [setLocalArtifact]
   );
 
+  const { data: localArtifactMetadata, mutate: setLocalArtifactMetadata } =
+    useSWR<any>(
+      () =>
+        artifact.documentId ? `artifact-metadata-${artifact.documentId}` : null,
+      null,
+      {
+        fallbackData: null,
+      }
+    );
+
   return useMemo(
     () => ({
       artifact,
       setArtifact,
+      metadata: localArtifactMetadata,
+      setMetadata: setLocalArtifactMetadata,
     }),
-    [artifact, setArtifact]
+    [artifact, setArtifact, localArtifactMetadata, setLocalArtifactMetadata]
   );
 }
