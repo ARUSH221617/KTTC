@@ -1,17 +1,16 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { validateAdminSession } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
-export async function GET(request: NextApiRequest, response: NextApiResponse) {
+export async function GET(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth(request, response);
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get('admin_token')?.value;
+
+    if (!adminToken || !(await validateAdminSession(adminToken))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get dashboard statistics
