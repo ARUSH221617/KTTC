@@ -5,8 +5,8 @@ import { ChatSDKError } from "../errors";
 import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
 import { generateHashedPassword } from "./utils";
-import type { VisibilityType } from "@/components/visibility-selector";
-import type { ArtifactKind } from "@/components/artifact";
+import type { VisibilityType } from "@/components/agent/visibility-selector";
+import type { ArtifactKind } from "@/components/agent/artifact";
 import { Prisma } from "@prisma/client";
 
 // Define Types locally since we removed src/lib/db/schema.ts

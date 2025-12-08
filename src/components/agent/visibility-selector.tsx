@@ -1,13 +1,13 @@
 "use client";
 
 import { type ReactNode, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/agent/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/agent/ui/dropdown-menu";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { cn } from "@/lib/utils";
 import {
