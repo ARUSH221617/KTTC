@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
     const adminToken = cookieStore.get('admin_token')?.value;
 
     if (!adminToken || !(await validateAdminSession(adminToken))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const { searchParams } = new URL(request.url);
@@ -78,7 +81,10 @@ export async function POST(request: NextRequest) {
     const adminToken = cookieStore.get('admin_token')?.value;
 
     if (!adminToken || !(await validateAdminSession(adminToken))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const body = await request.json();
@@ -171,7 +177,10 @@ export async function DELETE(request: NextRequest) {
     const adminToken = cookieStore.get('admin_token')?.value;
 
     if (!adminToken || !(await validateAdminSession(adminToken))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const { searchParams } = new URL(request.url);
