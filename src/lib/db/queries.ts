@@ -532,6 +532,13 @@ export async function getMessageCountByUserId({
   id: string;
   differenceInHours: number;
 }) {
+  if (!id) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "User ID is required to get message count"
+    );
+  }
+
   try {
     const twentyFourHoursAgo = new Date(
       Date.now() - differenceInHours * 60 * 60 * 1000
@@ -548,7 +555,8 @@ export async function getMessageCountByUserId({
     });
 
     return count;
-  } catch (_error) {
+  } catch (error) {
+    console.error("Failed to get message count by user id", error);
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get message count by user id"
