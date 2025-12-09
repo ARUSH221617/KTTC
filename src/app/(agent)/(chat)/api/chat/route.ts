@@ -199,10 +199,15 @@ export async function POST(request: Request) {
         // AI SDK `LanguageModel` usually has `modelId`.
         const resolvedModelId = model.modelId;
 
+        const modelMessages = convertToModelMessages(uiMessages);
+        const system = systemPrompt({ selectedChatModel, requestHints });
+        if (system) {
+          modelMessages.unshift({ role: "system", content: system });
+        }
+
         const result = streamText({
           model: model,
-          system: systemPrompt({ selectedChatModel, requestHints }),
-          messages: convertToModelMessages(uiMessages),
+          messages: modelMessages,
           stopWhen: stepCountIs(5),
           experimental_activeTools:
             selectedChatModel === "reasoning"
