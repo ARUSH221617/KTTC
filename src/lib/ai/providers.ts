@@ -10,6 +10,23 @@ import { db } from "@/lib/db";
 const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY ?? "",
+  fetch: async (url, options) => {
+    if (options && options.body) {
+      try {
+        const body = JSON.parse(options.body as string);
+        if (body.messages) {
+          body.messages = body.messages.map((m: any) => {
+            if (m.role === "developer") return { ...m, role: "system" };
+            return m;
+          });
+          options.body = JSON.stringify(body);
+        }
+      } catch (error) {
+        console.error("OpenRouter fetch interceptor failed to parse body", error);
+      }
+    }
+    return fetch(url, options);
+  },
 });
 
 export const getMyProvider = async () => {
@@ -45,13 +62,13 @@ export const getMyProvider = async () => {
 
   return customProvider({
     languageModels: {
-      "agent": openrouter(agentModel),
+      "agent": openrouter.chat(agentModel),
       "reasoning": wrapLanguageModel({
-        model: openrouter(reasoningModel),
+        model: openrouter.chat(reasoningModel),
         middleware: extractReasoningMiddleware({ tagName: "think" }),
       }),
-      "title-model": openrouter(titleModel),
-      "artifact-model": openrouter(artifactModel),
+      "title-model": openrouter.chat(titleModel),
+      "artifact-model": openrouter.chat(artifactModel),
     },
   });
 };
