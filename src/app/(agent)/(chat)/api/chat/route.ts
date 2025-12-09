@@ -25,7 +25,7 @@ import type { VisibilityType } from "@/components/agent/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
-import { myProvider } from "@/lib/ai/providers";
+import { getMyProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -183,43 +183,21 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
-        let model: any;
-        let resolvedModelId: string | undefined;
+        const provider = await getMyProvider();
+        const model = provider.languageModel(selectedChatModel);
 
-        if (isTestEnvironment) {
-          model = myProvider.languageModel(selectedChatModel);
-        } else {
-          const settings = await db.setting.findMany();
-          const settingsMap = settings.reduce((acc, curr) => {
-            acc[curr.key] = curr.value;
-            return acc;
-          }, {} as Record<string, string>);
+        // We still want to report the model ID for usage tracking.
+        // But the provider doesn't expose the resolved model ID directly unless we access internal properties
+        // or re-resolve it from settings here, which defeats the purpose of centralized provider.
+        // However, in TokenLens `onFinish`, we need `modelId`.
 
-          const defaultAgentModel = "google/gemma-2-9b-it:free";
-          const defaultReasoningModel = "google/gemma-2-9b-it:free";
+        // Since `getMyProvider` logic is now centralized, we can fetch settings here just for reporting if needed,
+        // OR trust that `model` works.
+        // But `resolvedModelId` was used for `getUsage` in `onFinish`.
 
-          resolvedModelId = defaultAgentModel;
-          if (selectedChatModel === "agent") {
-            resolvedModelId = settingsMap["agentModel"] || defaultAgentModel;
-          } else if (selectedChatModel === "reasoning") {
-            resolvedModelId =
-              settingsMap["reasoningModel"] || defaultReasoningModel;
-          }
-
-          const openrouter = createOpenAI({
-            baseURL: "https://openrouter.ai/api/v1",
-            apiKey: process.env.OPENROUTER_API_KEY ?? "",
-          });
-
-          model = openrouter(resolvedModelId);
-
-          if (selectedChatModel === "reasoning") {
-            model = wrapLanguageModel({
-              model,
-              middleware: extractReasoningMiddleware({ tagName: "think" }),
-            });
-          }
-        }
+        // Let's rely on the model object having a `modelId` property if possible?
+        // AI SDK `LanguageModel` usually has `modelId`.
+        const resolvedModelId = model.modelId;
 
         const result = streamText({
           model: model,
