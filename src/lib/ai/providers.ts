@@ -21,8 +21,8 @@ export const myProvider = isTestEnvironment
       } = require("./models.mock");
       return customProvider({
         languageModels: {
-          "chat-model": chatModel,
-          "chat-model-reasoning": reasoningModel,
+          "agent": chatModel,
+          "reasoning": reasoningModel,
           "title-model": titleModel,
           "artifact-model": artifactModel,
         },
@@ -30,8 +30,8 @@ export const myProvider = isTestEnvironment
     })()
   : customProvider({
       languageModels: {
-        "chat-model": openrouter("google/gemma-2-9b-it:free"),
-        "chat-model-reasoning": wrapLanguageModel({
+        "agent": openrouter("google/gemma-2-9b-it:free"),
+        "reasoning": wrapLanguageModel({
           model: openrouter("google/gemma-2-9b-it:free"),
           middleware: extractReasoningMiddleware({ tagName: "think" }),
         }),
