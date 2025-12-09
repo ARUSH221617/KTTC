@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL: string = "chat-model";
+export const DEFAULT_CHAT_MODEL: string = "agent";
 
 export type ChatModel = {
   id: string;
@@ -8,14 +8,13 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
-    id: "chat-model",
-    name: "Gemma Free",
-    description: "Fast and efficient open model by Google",
+    id: "agent",
+    name: "Agent",
+    description: "Standard conversational agent",
   },
   {
-    id: "chat-model-reasoning",
-    name: "Gemma Free (Reasoning)",
-    description:
-      "Uses chain-of-thought reasoning (simulated) for complex problems",
+    id: "reasoning",
+    name: "Reasoning",
+    description: "Agent with advanced reasoning capabilities",
   },
 ];
