@@ -12,9 +12,13 @@ export async function checkAdminCredentials(email: string, password: string) {
     where: { email },
   });
 
-  if (user && user.password && (await bcrypt.compare(password, user.password))) {
+  if (
+    user &&
+    user.password &&
+    (await bcrypt.compare(password, user.password))
+  ) {
     // Check if the user has admin role
-    if (user.role === 'admin' || user.role === 'ADMIN') {
+    if (user.role === "admin" || user.role === "ADMIN") {
       return user;
     }
   }
@@ -32,25 +36,33 @@ export async function checkAdminCredentials(email: string, password: string) {
 }
 
 // Properly implement session creation with JWT
-export async function createAdminSession(id: string, email: string): Promise<string> {
+export async function createAdminSession(
+  id: string,
+  email: string
+): Promise<string> {
   const token = jwt.sign(
-    { id, email, type: 'admin_session' },
-    process.env.JWT_SECRET || 'fallback_jwt_secret_key',
-    { expiresIn: '24h' }
+    { id, email, type: "admin_session" },
+    process.env.JWT_SECRET || "fallback_jwt_secret_key",
+    { expiresIn: "24h" }
   );
   return token;
 }
 
 // Function to verify admin session
-export async function verifyAdminSession(token: string): Promise<{ id: string; email: string } | null> {
+export async function verifyAdminSession(
+  token: string
+): Promise<{ id: string; email: string } | null> {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_jwt_secret_key') as { id: string; email: string; type: string };
-    if (decoded.type === 'admin_session') {
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "fallback_jwt_secret_key"
+    ) as { id: string; email: string; type: string };
+    if (decoded.type === "admin_session") {
       return { id: decoded.id, email: decoded.email };
     }
     return null;
   } catch (error) {
-    console.error('Session verification error:', error);
+    console.error("Session verification error:", error);
     return null;
   }
 }
@@ -79,7 +91,7 @@ export const {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials.password) {
           return null;
         }
@@ -93,7 +105,12 @@ export const {
           user.password &&
           (await bcrypt.compare(credentials.password as string, user.password))
         ) {
-          return user;
+          // Ensure the returned object conforms to NextAuth's User shape by adding `type`.
+          // Cast to any to avoid strict structural mismatches with your app-specific User type.
+          return {
+            ...user,
+            type: user.role ? (user.role.toUpperCase() as any) : "USER",
+          } as any;
         } else {
           return null;
         }
@@ -103,7 +120,7 @@ export const {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id!;
         token.role = user.role;
       }
       return token;
