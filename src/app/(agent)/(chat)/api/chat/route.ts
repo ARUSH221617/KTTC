@@ -1,4 +1,6 @@
 import { geolocation } from "@vercel/functions";
+import { db } from "@/lib/db";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -6,6 +8,8 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
+  wrapLanguageModel,
+  extractReasoningMiddleware,
 } from "ai";
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
@@ -26,7 +30,7 @@ import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
-import { isProductionEnvironment } from "@/lib/constants";
+import { isProductionEnvironment, isTestEnvironment } from "@/lib/constants";
 import {
   createStreamId,
   deleteChatById,
@@ -104,7 +108,7 @@ export async function POST(request: Request) {
     }: {
       id: string;
       message: ChatMessage;
-      selectedChatModel: ChatModel["id"];
+      selectedChatModel: "agent" | "reasoning";
       selectedVisibilityType: VisibilityType;
     } = requestBody;
 
@@ -178,14 +182,52 @@ export async function POST(request: Request) {
     let finalMergedUsage: AppUsage | undefined;
 
     const stream = createUIMessageStream({
-      execute: ({ writer: dataStream }) => {
+      execute: async ({ writer: dataStream }) => {
+        let model: any;
+        let resolvedModelId: string | undefined;
+
+        if (isTestEnvironment) {
+          model = myProvider.languageModel(selectedChatModel);
+        } else {
+          const settings = await db.setting.findMany();
+          const settingsMap = settings.reduce((acc, curr) => {
+            acc[curr.key] = curr.value;
+            return acc;
+          }, {} as Record<string, string>);
+
+          const defaultAgentModel = "google/gemma-2-9b-it:free";
+          const defaultReasoningModel = "google/gemma-2-9b-it:free";
+
+          resolvedModelId = defaultAgentModel;
+          if (selectedChatModel === "agent") {
+            resolvedModelId = settingsMap["agentModel"] || defaultAgentModel;
+          } else if (selectedChatModel === "reasoning") {
+            resolvedModelId =
+              settingsMap["reasoningModel"] || defaultReasoningModel;
+          }
+
+          const openrouter = createOpenAI({
+            baseURL: "https://openrouter.ai/api/v1",
+            apiKey: process.env.OPENROUTER_API_KEY ?? "",
+          });
+
+          model = openrouter(resolvedModelId);
+
+          if (selectedChatModel === "reasoning") {
+            model = wrapLanguageModel({
+              model,
+              middleware: extractReasoningMiddleware({ tagName: "think" }),
+            });
+          }
+        }
+
         const result = streamText({
-          model: myProvider.languageModel(selectedChatModel),
+          model: model,
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
-            selectedChatModel === "chat-model-reasoning"
+            selectedChatModel === "reasoning"
               ? []
               : [
                   "getWeather",
@@ -210,8 +252,7 @@ export async function POST(request: Request) {
           onFinish: async ({ usage }) => {
             try {
               const providers = await getTokenlensCatalog();
-              const modelId =
-                myProvider.languageModel(selectedChatModel).modelId;
+              const modelId = resolvedModelId;
               if (!modelId) {
                 finalMergedUsage = usage;
                 dataStream.write({

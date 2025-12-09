@@ -154,3 +154,8 @@ model Stream {
 
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 }
+
+model Setting {
+  key   String @id
+  value String
+}
