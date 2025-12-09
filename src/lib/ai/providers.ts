@@ -53,7 +53,7 @@ export const getMyProvider = async () => {
     return acc;
   }, {} as Record<string, string>);
 
-  const defaultModel = "google/gemma-2-9b-it:free";
+  const defaultModel = "openai/gpt-oss-20b:free";
   const agentModel = settingsMap["agentModel"] || defaultModel;
   const reasoningModel = settingsMap["reasoningModel"] || defaultModel;
   // We assume titleModel and artifactModel might be in settings, or default to agentModel or the hardcoded default
