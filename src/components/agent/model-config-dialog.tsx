@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import {
   Dialog,
@@ -11,17 +11,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/agent/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/agent/ui/select";
 import { Label } from "@/components/agent/ui/label";
-import { Input } from "@/components/ui/input";
 import { toast } from "@/components/agent/toast";
 import { LoaderIcon } from "@/components/agent/icons";
+import { ModelSelectPopover } from "@/components/agent/model-select-popover";
 
 interface Model {
   id: string;
@@ -53,8 +46,6 @@ export function ModelConfigDialog({
 
   const [agentModel, setAgentModel] = useState("");
   const [reasoningModel, setReasoningModel] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -92,30 +83,10 @@ export function ModelConfigDialog({
 
   const models: Model[] = modelsData?.data || [];
 
-  const filteredModels = useMemo(() => {
-    return models.filter((model) => {
-      const matchesSearch =
-        model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        model.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-      if (!matchesSearch) return false;
-
-      if (maxPrice) {
-        // Pricing is usually a string like "0.000005" per token.
-        // We compare price per million tokens.
-        const pricePerMillion = parseFloat(model.pricing.prompt) * 1000000;
-        if (!isNaN(pricePerMillion) && pricePerMillion > parseFloat(maxPrice)) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [models, searchQuery, maxPrice]);
-
-  const agentModels = filteredModels.filter((m) =>
+  const agentModels = models.filter((m) =>
     m.supported_parameters?.includes("tools")
   );
-  const reasoningModels = filteredModels.filter(
+  const reasoningModels = models.filter(
     (m) =>
       m.supported_parameters?.includes("reasoning") ||
       m.supported_parameters?.includes("include_reasoning")
@@ -123,7 +94,7 @@ export function ModelConfigDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] overflow-visible">
         <DialogHeader>
           <DialogTitle>Model Configuration</DialogTitle>
           <DialogDescription>
@@ -131,58 +102,25 @@ export function ModelConfigDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 py-4">
-          <div className="flex flex-row gap-2">
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="search">Search Models</Label>
-              <Input
-                id="search"
-                placeholder="Search by name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="grid w-1/3 items-center gap-1.5">
-              <Label htmlFor="price">Max Price</Label>
-              <Input
-                id="price"
-                type="number"
-                placeholder="$/1M"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-              />
-            </div>
-          </div>
-
+        <div className="flex flex-col gap-6 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="agent-model" className="text-right">
               Agent
             </Label>
             <div className="col-span-3">
-              <Select value={agentModel} onValueChange={setAgentModel}>
-                <SelectTrigger id="agent-model">
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {isLoadingModels ? (
-                    <div className="p-2 flex justify-center">
-                      <div className="animate-spin">
-                        <LoaderIcon size={16} />
-                      </div>
-                    </div>
-                  ) : agentModels.length > 0 ? (
-                    agentModels.map((model) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-2 text-sm text-muted-foreground text-center">
-                      No models found
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
+               {isLoadingModels ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <LoaderIcon size={16} className="animate-spin" />
+                    Loading models...
+                  </div>
+               ) : (
+                  <ModelSelectPopover
+                    models={agentModels}
+                    selectedModelId={agentModel}
+                    onSelect={setAgentModel}
+                    label="Agent Model"
+                  />
+               )}
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -190,30 +128,19 @@ export function ModelConfigDialog({
               Reasoning
             </Label>
             <div className="col-span-3">
-              <Select value={reasoningModel} onValueChange={setReasoningModel}>
-                <SelectTrigger id="reasoning-model">
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {isLoadingModels ? (
-                    <div className="p-2 flex justify-center">
-                      <div className="animate-spin">
-                        <LoaderIcon size={16} />
-                      </div>
-                    </div>
-                  ) : reasoningModels.length > 0 ? (
-                    reasoningModels.map((model) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-2 text-sm text-muted-foreground text-center">
-                      No models found
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
+               {isLoadingModels ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <LoaderIcon size={16} className="animate-spin" />
+                    Loading models...
+                  </div>
+               ) : (
+                  <ModelSelectPopover
+                    models={reasoningModels}
+                    selectedModelId={reasoningModel}
+                    onSelect={setReasoningModel}
+                    label="Reasoning Model"
+                  />
+               )}
             </div>
           </div>
         </div>
