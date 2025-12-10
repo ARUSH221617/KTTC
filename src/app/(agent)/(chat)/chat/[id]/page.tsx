@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
-import { auth } from "@/app/(agent)/(auth)/auth";
+import { auth } from "@/lib/auth";
 import { Chat } from "@/components/agent/chat";
 import { DataStreamHandler } from "@/components/agent/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";

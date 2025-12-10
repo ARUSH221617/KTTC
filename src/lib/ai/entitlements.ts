@@ -1,5 +1,6 @@
-import type { UserType } from "@/app/(agent)/(auth)/auth";
 import type { ChatModel } from "./models";
+
+export type UserType = "guest" | "regular";
 
 type Entitlements = {
   maxMessagesPerDay: number;

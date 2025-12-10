@@ -1,25 +1,16 @@
-import Form from "next/form";
+"use client";
 
-import { signOut } from "@/app/(agent)/(auth)/auth";
+import { signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 export const SignOutForm = () => {
   return (
-    <Form
-      action={async () => {
-        "use server";
-
-        await signOut({
-          redirectTo: "/",
-        });
-      }}
-      className="w-full"
+    <Button
+      variant="ghost"
+      className="w-full px-1 py-0.5 justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+      onClick={() => signOut({ callbackUrl: "/" })}
     >
-      <button
-        className="w-full px-1 py-0.5 text-left text-red-500"
-        type="submit"
-      >
-        Sign out
-      </button>
-    </Form>
+      Sign out
+    </Button>
   );
 };
