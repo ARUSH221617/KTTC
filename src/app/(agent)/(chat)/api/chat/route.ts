@@ -18,9 +18,9 @@ import { fetchModels } from "tokenlens/fetch";
 import { getUsage } from "tokenlens/helpers";
 import { auth, type UserType } from "@/app/(agent)/(auth)/auth";
 import type { VisibilityType } from "@/components/agent/visibility-selector";
-import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getMyProvider } from "@/lib/ai/providers";
+import { checkOpenRouterLimits } from "@/lib/ai/openrouter";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -115,17 +115,7 @@ export async function POST(request: Request) {
 
     const userType: UserType = session.user.type;
 
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
-      differenceInHours: 24,
-    });
-
-    const entitlement = entitlementsByUserType[userType] ??
-      entitlementsByUserType["default"] ?? { maxMessagesPerDay: Infinity };
-
-    if (messageCount > entitlement.maxMessagesPerDay) {
-      return new ChatSDKError("rate_limit:chat").toResponse();
-    }
+    await checkOpenRouterLimits();
 
     const chat = await getChatById({ id });
     let messagesFromDb: Message[] = [];
