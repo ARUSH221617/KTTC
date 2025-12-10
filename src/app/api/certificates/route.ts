@@ -58,6 +58,12 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // Get all certificates (admin use)
+      const session = await auth();
+
+      if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
       const certificates = await db.certificate.findMany({
         include: {
           user: true,
