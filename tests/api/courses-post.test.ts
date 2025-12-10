@@ -15,17 +15,17 @@ jest.mock('@/lib/db', () => ({
 }));
 
 // Mock authentication
+const mockAuth = jest.fn();
 jest.mock('@/lib/auth', () => ({
-  validateAdminSession: jest.fn().mockResolvedValue(true),
-}));
-
-jest.mock('next/headers', () => ({
-  cookies: jest.fn().mockReturnValue({
-    get: jest.fn().mockReturnValue({ value: 'valid_token' }),
-  }),
+  auth: (...args: any[]) => mockAuth(...args)
 }));
 
 describe('POST /api/courses', () => {
+
+  beforeEach(() => {
+    mockAuth.mockResolvedValue({ user: { id: 'admin', role: 'admin' } });
+  });
+
   it('should create course even if thumbnail is missing (optional now)', async () => {
     const body = {
       title: 'New Course',
@@ -43,7 +43,6 @@ describe('POST /api/courses', () => {
     });
 
     const response = await POST(request);
-    const data = await response.json();
 
     expect(response.status).toBe(201); // Expect success now
     expect(db.course.create).toHaveBeenCalled();
@@ -66,7 +65,6 @@ describe('POST /api/courses', () => {
     });
 
     const response = await POST(request);
-    const data = await response.json();
 
     expect(response.status).toBe(201); // Expect success now
     expect(db.course.create).toHaveBeenCalled();

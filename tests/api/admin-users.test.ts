@@ -4,9 +4,10 @@
  */
 import { NextRequest } from 'next/server';
 
-// Mock validateAdminSession
+// Mock auth
+const mockAuth = jest.fn();
 jest.mock('@/lib/auth', () => ({
-  validateAdminSession: jest.fn(),
+  auth: (...args: any[]) => mockAuth(...args)
 }));
 
 // Mock db
@@ -19,24 +20,15 @@ jest.mock('@/lib/db', () => ({
   }
 }));
 
-// Mock cookies
-let mockCookiesGet = jest.fn();
-jest.mock('next/headers', () => ({
-  cookies: () => Promise.resolve({
-    get: mockCookiesGet
-  }),
-}));
-
 import { GET } from '@/app/api/admin/users/route';
 
 describe('Admin Users API Authentication', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockCookiesGet.mockReset();
   });
 
-  it('returns 401 if admin_token cookie is missing', async () => {
-    mockCookiesGet.mockReturnValue(undefined);
+  it('returns 401 if session is missing', async () => {
+    mockAuth.mockResolvedValue(null);
 
     const req = new NextRequest('http://localhost:3000/api/admin/users');
 
@@ -45,10 +37,10 @@ describe('Admin Users API Authentication', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 if admin_token is invalid', async () => {
-    mockCookiesGet.mockReturnValue({ value: 'invalid-token' });
-    const { validateAdminSession } = require('@/lib/auth');
-    validateAdminSession.mockResolvedValue(null);
+  it('returns 401 if user is not admin', async () => {
+    mockAuth.mockResolvedValue({
+        user: { id: 'user-id', role: 'user' }
+    });
 
     const req = new NextRequest('http://localhost:3000/api/admin/users');
 
@@ -57,10 +49,10 @@ describe('Admin Users API Authentication', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 200 if admin_token is valid', async () => {
-    mockCookiesGet.mockReturnValue({ value: 'valid-token' });
-    const { validateAdminSession } = require('@/lib/auth');
-    validateAdminSession.mockResolvedValue({ id: 'admin', role: 'admin' });
+  it('returns 200 if user is admin', async () => {
+    mockAuth.mockResolvedValue({
+        user: { id: 'admin-id', role: 'admin' }
+    });
 
     const req = new NextRequest('http://localhost:3000/api/admin/users');
 
