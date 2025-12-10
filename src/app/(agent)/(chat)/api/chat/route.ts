@@ -1,6 +1,4 @@
 import { geolocation } from "@vercel/functions";
-import { db } from "@/lib/db";
-import { createOpenAI } from "@ai-sdk/openai";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -8,8 +6,6 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
-  wrapLanguageModel,
-  extractReasoningMiddleware,
 } from "ai";
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
@@ -23,14 +19,13 @@ import { getUsage } from "tokenlens/helpers";
 import { auth, type UserType } from "@/app/(agent)/(auth)/auth";
 import type { VisibilityType } from "@/components/agent/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
-import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getMyProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
-import { isProductionEnvironment, isTestEnvironment } from "@/lib/constants";
+import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
   deleteChatById,
@@ -125,7 +120,10 @@ export async function POST(request: Request) {
       differenceInHours: 24,
     });
 
-    if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
+    const entitlement = entitlementsByUserType[userType] ??
+      entitlementsByUserType["default"] ?? { maxMessagesPerDay: Infinity };
+
+    if (messageCount > entitlement.maxMessagesPerDay) {
       return new ChatSDKError("rate_limit:chat").toResponse();
     }
 
