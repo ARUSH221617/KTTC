@@ -17,15 +17,15 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  eslint: {
-    // 构建时忽略ESLint错误
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "*.blob.vercel-storage.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*avatar.vercel.sh",
       },
     ],
   },

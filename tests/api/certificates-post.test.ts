@@ -1,7 +1,6 @@
 
 import { POST } from '@/app/api/admin/certificates/route';
 import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
 
 /**
  * @jest-environment node
@@ -15,13 +14,23 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
+// Mock auth
+const mockAuth = jest.fn();
 jest.mock('@/lib/auth', () => ({
-  auth: jest.fn(),
+  auth: (...args: any[]) => mockAuth(...args)
 }));
 
 describe('POST /api/admin/certificates', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should create a certificate successfully', async () => {
-    (auth as jest.Mock).mockResolvedValue({ user: { id: 'admin-id' } });
+    // Setup authorized session
+    mockAuth.mockResolvedValue({
+        user: { id: 'admin-id', role: 'admin' }
+    });
+
     (db.certificate.create as jest.Mock).mockResolvedValue({
       id: 'cert-1',
       userId: 'user-1',
@@ -38,7 +47,8 @@ describe('POST /api/admin/certificates', () => {
       }),
     });
 
-    const response = await POST(request, {});
+    // @ts-ignore
+    const response = await POST(request);
 
     expect(response.status).toBe(201);
     const data = await response.json();
@@ -59,14 +69,15 @@ describe('POST /api/admin/certificates', () => {
   });
 
   it('should handle unauthorized access', async () => {
-    (auth as jest.Mock).mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null);
 
     const request = new Request('http://localhost:3000/api/admin/certificates', {
       method: 'POST',
       body: JSON.stringify({}),
     });
 
-    const response = await POST(request, {});
+    // @ts-ignore
+    const response = await POST(request);
     expect(response.status).toBe(401);
   });
 });

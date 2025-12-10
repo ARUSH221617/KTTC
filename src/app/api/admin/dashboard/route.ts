@@ -1,17 +1,14 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { NextApiRequest, NextApiResponse } from 'next';
 
-export async function GET(request: NextApiRequest, response: NextApiResponse) {
+export async function GET(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await auth(request, response);
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const session = await auth();
+
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get dashboard statistics

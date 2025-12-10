@@ -16,6 +16,9 @@ model User {
   updatedAt    DateTime   @updatedAt
   courses      Course[]
   certificates Certificate[]
+  chats        Chat[]
+  documents    Document[]
+  suggestions  Suggestion[]
 }
 
 model Course {
@@ -67,4 +70,83 @@ model Contact {
   subject   String   @default("No Subject")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Chat {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  title       String
+  userId      String
+  visibility  String   @default("private")
+  lastContext Json?
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  votes       Vote[]
+  streams     Stream[]
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  chatId      String
+  role        String
+  parts       Json
+  attachments Json?
+  createdAt   DateTime @default(now())
+
+  chat        Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  votes       Vote[]
+}
+
+model Vote {
+  chatId    String
+  messageId String
+  isUpvoted Boolean
+
+  chat      Chat    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, messageId])
+}
+
+model Document {
+  id        String   @default(uuid())
+  createdAt DateTime @default(now())
+  title     String
+  content   String?
+  kind      String   @default("text")
+  userId    String
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suggestions Suggestion[]
+
+  @@id([id, createdAt])
+}
+
+model Suggestion {
+  id                String   @id @default(uuid())
+  documentId        String
+  documentCreatedAt DateTime
+  originalText      String
+  suggestedText     String
+  description       String?
+  isResolved        Boolean  @default(false)
+  userId            String
+  createdAt         DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId, documentCreatedAt], references: [id, createdAt], onDelete: Cascade)
+}
+
+model Stream {
+  id        String   @id @default(uuid())
+  chatId    String
+  createdAt DateTime @default(now())
+
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+}
+
+model Setting {
+  key   String @id
+  value String
 }

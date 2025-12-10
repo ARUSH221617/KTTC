@@ -1,17 +1,17 @@
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { NextApiRequest, NextApiResponse } from "next";
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { testimonialSchema, testimonialUpdateSchema } from '@/lib/validations';
 
-export async function GET(request: NextApiRequest, response: NextApiResponse) {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth(request, response);
-    if (!session) {
+    const session = await auth();
+
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url!);
+    const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
@@ -52,10 +52,11 @@ export async function GET(request: NextApiRequest, response: NextApiResponse) {
   }
 }
 
-export async function POST(request: any, response: NextApiResponse) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await auth(request, response);
-    if (!session) {
+    const session = await auth();
+
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -87,10 +88,11 @@ export async function POST(request: any, response: NextApiResponse) {
   }
 }
 
-export async function PUT(request: any, response: NextApiResponse) {
+export async function PUT(request: NextRequest) {
   try {
-    const session = await auth(request, response);
-    if (!session) {
+    const session = await auth();
+
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -123,14 +125,15 @@ export async function PUT(request: any, response: NextApiResponse) {
   }
 }
 
-export async function DELETE(request: NextApiRequest, response: NextApiResponse) {
+export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth(request, response);
-    if (!session) {
+    const session = await auth();
+
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url!);
+    const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {

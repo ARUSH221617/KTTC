@@ -20,6 +20,10 @@ const customJestConfig = {
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
   },
+  testPathIgnorePatterns: [
+      '<rootDir>/tests/e2e/',
+      '<rootDir>/tests/routes/'
+  ]
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

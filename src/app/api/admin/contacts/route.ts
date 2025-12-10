@@ -1,16 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
 
-export async function GET(request: NextApiRequest, response: NextApiResponse) {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth(request, response);
-    if (!session) {
+    const session = await auth();
+
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url!);
+    const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
