@@ -2,7 +2,7 @@ import { streamObject, tool, type UIMessageStreamWriter } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { getDocumentById, saveSuggestions } from "@/lib/db/queries";
-import type { Suggestion } from "@/lib/db/schema";
+import type { Suggestion } from "@prisma/client";
 import type { ChatMessage } from "@/lib/types";
 import { generateUUID } from "@/lib/utils";
 import { getMyProvider } from "../providers";
@@ -53,8 +53,10 @@ export const requestSuggestions = ({
       });
 
       for await (const element of elementStream) {
-        // @ts-expect-error todo: fix type
-        const suggestion: Suggestion = {
+        const suggestion: Omit<
+          Suggestion,
+          "userId" | "createdAt" | "documentCreatedAt"
+        > = {
           originalText: element.originalSentence,
           suggestedText: element.suggestedSentence,
           description: element.description,
