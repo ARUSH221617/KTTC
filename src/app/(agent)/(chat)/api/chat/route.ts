@@ -36,7 +36,7 @@ import {
   saveMessages,
   updateChatLastContextById,
 } from "@/lib/db/queries";
-import type { DBMessage } from "@/lib/db/schema";
+import type { Message } from "@prisma/client";
 import { ChatSDKError } from "@/lib/errors";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
     }
 
     const chat = await getChatById({ id });
-    let messagesFromDb: DBMessage[] = [];
+    let messagesFromDb: Message[] = [];
 
     if (chat) {
       if (chat.userId !== session.user.id) {
