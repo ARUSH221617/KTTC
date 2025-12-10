@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { AppSidebar } from "@/components/agent/app-sidebar";
 import { DataStreamProvider } from "@/components/agent/data-stream-provider";
 import { SidebarInset, SidebarProvider } from "@/components/agent/ui/sidebar";
-import { auth } from "../../(auth)/auth";
+import { auth } from "@/lib/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

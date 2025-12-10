@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Users,
@@ -77,7 +78,7 @@ export function Sidebar({ className, isCollapsed = false, toggleCollapse }: Side
   ];
 
   return (
-    <div className={cn("pb-12 h-full border-r bg-background", className)}>
+    <div className={cn("pb-12 h-full border-r bg-background flex flex-col justify-between", className)}>
       <div className="space-y-4 py-4">
         <div className={cn("px-3 py-2 transition-all", isCollapsed ? "px-2" : "px-3")}>
           <div className="flex items-center justify-between mb-2 px-2 h-9">
@@ -141,6 +142,37 @@ export function Sidebar({ className, isCollapsed = false, toggleCollapse }: Side
             })}
           </div>
         </div>
+      </div>
+
+      <div className="px-3 py-4">
+         <div className={cn("px-3 py-2 transition-all", isCollapsed ? "px-2" : "px-3")}>
+             {isCollapsed ? (
+                 <Tooltip delayDuration={0}>
+                     <TooltipTrigger asChild>
+                         <Button
+                             variant="ghost"
+                             className="w-full justify-center px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                             onClick={() => signOut({ callbackUrl: "/" })}
+                         >
+                             <LogOut className="h-4 w-4" />
+                             <span className="sr-only">Sign out</span>
+                         </Button>
+                     </TooltipTrigger>
+                     <TooltipContent side="right">
+                         Sign out
+                     </TooltipContent>
+                 </Tooltip>
+             ) : (
+                 <Button
+                     variant="ghost"
+                     className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                     onClick={() => signOut({ callbackUrl: "/" })}
+                 >
+                     <LogOut className="mr-2 h-4 w-4" />
+                     Sign out
+                 </Button>
+             )}
+         </div>
       </div>
     </div>
   );

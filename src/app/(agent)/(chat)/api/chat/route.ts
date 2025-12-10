@@ -16,7 +16,8 @@ import {
 import type { ModelCatalog } from "tokenlens/core";
 import { fetchModels } from "tokenlens/fetch";
 import { getUsage } from "tokenlens/helpers";
-import { auth, type UserType } from "@/app/(agent)/(auth)/auth";
+import { auth } from "@/lib/auth";
+import type { UserType } from "@/lib/ai/entitlements";
 import type { VisibilityType } from "@/components/agent/visibility-selector";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getMyProvider } from "@/lib/ai/providers";
@@ -113,7 +114,7 @@ export async function POST(request: Request) {
       return new ChatSDKError("unauthorized:chat").toResponse();
     }
 
-    const userType: UserType = session.user.type;
+    const userType: UserType = "regular"; // Since we only support authenticated users via root auth now
 
     await checkOpenRouterLimits();
 
