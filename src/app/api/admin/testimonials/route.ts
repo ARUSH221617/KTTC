@@ -1,15 +1,13 @@
 import { db } from '@/lib/db';
-import { validateAdminSession } from '@/lib/auth';
-import { cookies } from 'next/headers';
+import { auth } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { testimonialSchema, testimonialUpdateSchema } from '@/lib/validations';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_token')?.value;
+    const session = await auth();
 
-    if (!adminToken || !(await validateAdminSession(adminToken))) {
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -56,10 +54,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_token')?.value;
+    const session = await auth();
 
-    if (!adminToken || !(await validateAdminSession(adminToken))) {
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -93,10 +90,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_token')?.value;
+    const session = await auth();
 
-    if (!adminToken || !(await validateAdminSession(adminToken))) {
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -131,10 +127,9 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_token')?.value;
+    const session = await auth();
 
-    if (!adminToken || !(await validateAdminSession(adminToken))) {
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

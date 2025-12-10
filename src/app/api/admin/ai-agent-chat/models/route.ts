@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/auth";
-import { cookies } from "next/headers";
+import { auth } from "@/lib/auth";
 import { OpenRouter } from "@openrouter/sdk";
 
 export async function GET(req: NextRequest) {
-  const cookieStore = await cookies();
-  const adminToken = cookieStore.get('admin_token')?.value;
+  const session = await auth();
 
-  if (!adminToken || !(await validateAdminSession(adminToken))) {
+  if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

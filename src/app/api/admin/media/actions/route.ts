@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { del, put } from '@vercel/blob';
 import { db } from '@/lib/db';
-import { validateAdminSession } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import sharp from 'sharp';
 
 export async function DELETE(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_token')?.value;
+    const session = await auth();
 
-    if (!adminToken || !(await validateAdminSession(adminToken))) {
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -34,10 +32,9 @@ export async function DELETE(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_token')?.value;
+    const session = await auth();
 
-    if (!adminToken || !(await validateAdminSession(adminToken))) {
+    if (!session?.user?.id || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

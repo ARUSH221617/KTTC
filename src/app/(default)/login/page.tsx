@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
+import { signIn } from 'next-auth/react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,30 +39,27 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Login successful - redirect to admin dashboard
-        toast({
-          title: "Login Successful",
-          description: "Redirecting to dashboard...",
-        });
-        router.push('/admin');
-      } else {
-        // Login failed
+      if (result?.error) {
         toast({
           title: "Login Failed",
-          description: data.error || "Invalid credentials. Please check your email and password.",
+          description: "Invalid credentials. Please check your email and password.",
           variant: "destructive",
         });
+      } else {
+        toast({
+          title: "Login Successful",
+          description: "Redirecting...",
+        });
+        // We let the client router handle the redirect, or refresh to let middleware handle it
+        router.refresh();
+        // Force hard reload or router push to admin to ensure middleware catches it
+        router.push('/admin');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -95,9 +92,7 @@ export default function LoginPage() {
                 type="email"
                 placeholder="m@example.com"
                 required
-                onChange={(e) => validateField('email', e.target.value)}
               />
-              <span id="email-error" className="text-xs text-red-500 hidden"></span>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -107,9 +102,7 @@ export default function LoginPage() {
                 type="password"
                 required
                 minLength={6}
-                onChange={(e) => validateField('password', e.target.value)}
               />
-              <span id="password-error" className="text-xs text-red-500 hidden"></span>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Logging in...' : 'Login'}
@@ -120,47 +113,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-// Field validation function
-function validateField(fieldName: string, value: string) {
-  const errorElement = document.getElementById(`${fieldName}-error`) as HTMLSpanElement;
-
-  // Clear previous error state
-  errorElement.classList.add('hidden');
-  const inputElement = document.getElementById(fieldName) as HTMLInputElement;
-  inputElement.classList.remove('border-red-500');
-
-  if (fieldName === 'email') {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!value) {
-      showError('email', 'Email is required');
-      return false;
-    } else if (!emailRegex.test(value)) {
-      showError('email', 'Please enter a valid email address');
-      return false;
-    }
-  }
-
-  if (fieldName === 'password') {
-    if (!value) {
-      showError('password', 'Password is required');
-      return false;
-    } else if (value.length < 6) {
-      showError('password', 'Password must be at least 6 characters');
-      return false;
-    }
-  }
-
-  return true;
-}
-
-// Show error helper
-function showError(field: string, message: string) {
-  const errorElement = document.getElementById(`${field}-error`) as HTMLSpanElement;
-  const inputElement = document.getElementById(field) as HTMLInputElement;
-
-  errorElement.textContent = message;
-  errorElement.classList.remove('hidden');
-  inputElement.classList.add('border-red-500');
-}
-
