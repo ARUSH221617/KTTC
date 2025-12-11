@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Target, Eye, Award, BookOpen, Globe, Lightbulb } from "lucide-react";
@@ -71,19 +70,34 @@ const teamMembers = [
 ];
 
 export default function AboutPage() {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "mainEntity": {
+      "@type": "EducationalOrganization",
+      "name": "Khuzestan Teacher Training Center",
+      "foundingDate": "2001",
+      "employees": teamMembers.map(member => ({
+        "@type": "Person",
+        "name": member.name,
+        "jobTitle": member.role,
+        "description": member.description
+      }))
+    }
+  };
 
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-50 to-indigo-100 py-20 lg:py-32">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-8">
-            <div className={`space-y-4 ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`}>
+            <div className="space-y-4 animate-fade-in">
               <Badge className="bg-yellow-400 text-blue-900 hover:bg-yellow-300">
                 About Our Institution
               </Badge>
@@ -91,7 +105,7 @@ export default function AboutPage() {
                 About Khuzestan Teacher Training Center
               </h1>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                A beacon of educational excellence in Khuzestan province, 
+                KTTC is a beacon of educational excellence in Khuzestan province,
                 dedicated to empowering educators and transforming lives through quality teacher education.
               </p>
             </div>
@@ -143,6 +157,34 @@ export default function AboutPage() {
                 alt="KTTC Campus Building"
                 className="rounded-xl shadow-lg w-full"
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section (GEO Optimized) */}
+      <section className="py-20 bg-white border-t">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Common questions about KTTC certifications and programs
+            </p>
+          </div>
+          <div className="max-w-3xl mx-auto space-y-6">
+            <div className="border rounded-lg p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Is KTTC accredited?</h3>
+              <p className="text-gray-600">Yes, KTTC is a fully accredited teacher training institute recognized by the Ministry of Education in Iran.</p>
+            </div>
+            <div className="border rounded-lg p-6">
+               <h3 className="text-xl font-bold text-gray-900 mb-2">What is the duration of courses?</h3>
+               <p className="text-gray-600">Courses range from short workshops (1-4 weeks) to comprehensive certification programs lasting over 9 weeks.</p>
+            </div>
+             <div className="border rounded-lg p-6">
+               <h3 className="text-xl font-bold text-gray-900 mb-2">How do I get certified?</h3>
+               <p className="text-gray-600">You must complete all course modules and pass the final assessment to receive your digital and physical certificate.</p>
             </div>
           </div>
         </div>
