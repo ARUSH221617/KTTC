@@ -15,20 +15,6 @@ const Footer = () => {
             <p className="text-gray-300 mb-4 max-w-md">
               Khuzestan Teacher Training Center - Empowering educators with modern teaching skills and professional development programs for over 20 years.
             </p>
-            <div className="flex space-x-4">
-              <Link href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">
-                <Facebook className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">
-                <Twitter className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">
-                <Instagram className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">
-                <MessageCircle className="h-5 w-5" />
-              </Link>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -66,20 +52,20 @@ const Footer = () => {
           {/* Contact Info */}
           <div>
             <h3 className="text-lg font-semibold mb-4 text-yellow-400">Contact Info</h3>
-            <div className="space-y-3">
+            <address className="space-y-3 not-italic">
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-yellow-400" />
                 <span className="text-gray-300 text-sm">Khorramshahr, Khuzestan, Iran</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-yellow-400" />
-                <span className="text-gray-300 text-sm">+98 61 2345 6789</span>
+                <a href="tel:+986123456789" className="text-gray-300 text-sm hover:text-yellow-400">+98 61 2345 6789</a>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-yellow-400" />
-                <span className="text-gray-300 text-sm">info@kttc.edu.ir</span>
+                <a href="mailto:info@kttc.edu.ir" className="text-gray-300 text-sm hover:text-yellow-400">info@kttc.edu.ir</a>
               </div>
-            </div>
+            </address>
           </div>
         </div>
 

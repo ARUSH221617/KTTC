@@ -39,7 +39,7 @@ export default function HomePage() {
     category: string;
     level: string;
     duration: string;
-    instructor: string; // Processed to always be string
+    instructor: string;
     thumbnail?: string;
   };
 
@@ -68,7 +68,7 @@ export default function HomePage() {
         let coursesData = await coursesResponse.json();
 
         // Process courses to handle potential nested instructor objects
-        coursesData = coursesData.map((course) => ({
+        coursesData = coursesData.map((course: any) => ({
           ...course,
           instructor:
             typeof course.instructor === "object" && course.instructor?.name
@@ -85,7 +85,7 @@ export default function HomePage() {
         let testimonialsData = await testimonialsResponse.json();
 
         // Process testimonials to ensure proper structure
-        testimonialsData = testimonialsData.map((testimonial) => ({
+        testimonialsData = testimonialsData.map((testimonial: any) => ({
           ...testimonial,
           name:
             typeof testimonial.name === "string"
@@ -106,8 +106,30 @@ export default function HomePage() {
     }
   };
 
+  const testimonialSchema = testimonials.map(testimonial => ({
+    "@type": "Review",
+    "reviewRating": {
+      "@type": "Rating",
+      "ratingValue": "5"
+    },
+    "author": {
+      "@type": "Person",
+      "name": testimonial.name
+    },
+    "reviewBody": testimonial.content
+  }));
+
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@graph": testimonialSchema
+  };
+
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
       {/* Hero Section */}
       <section className="relative bg-linear-to-br from-blue-50 to-indigo-100 py-20 lg:py-32">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -215,7 +237,7 @@ export default function HomePage() {
               </p>
               <Link href="/about">
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Read More →
+                  Read About KTTC History
                 </Button>
               </Link>
             </div>
@@ -255,11 +277,17 @@ export default function HomePage() {
                     className="hover:shadow-xl transition-shadow duration-300 bg-white"
                   >
                     <CardHeader className="p-0">
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="w-full h-48 object-cover rounded-t-lg"
-                      />
+                      {course.thumbnail ? (
+                        <img
+                          src={course.thumbnail}
+                          alt={course.title}
+                          className="w-full h-48 object-cover rounded-t-lg"
+                        />
+                      ) : (
+                         <div className="w-full h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
+                            <BookOpen className="h-12 w-12 text-gray-400" />
+                         </div>
+                      )}
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">
                       <div className="flex items-center justify-between">
@@ -292,7 +320,7 @@ export default function HomePage() {
                 variant="outline"
                 className="border-blue-600 text-blue-600 hover:bg-blue-50"
               >
-                View All Courses
+                View Teaching Courses
               </Button>
             </Link>
           </div>
