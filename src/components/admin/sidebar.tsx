@@ -16,7 +16,8 @@ import {
   Settings,
   Image,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BookOpen
 } from "lucide-react";
 import {
   Tooltip,
@@ -50,6 +51,12 @@ export function Sidebar({ className, isCollapsed = false, toggleCollapse }: Side
       icon: GraduationCap,
       href: "/admin/courses",
       active: pathname.startsWith("/admin/courses"),
+    },
+    {
+      label: "Blog",
+      icon: BookOpen,
+      href: "/admin/blog",
+      active: pathname.startsWith("/admin/blog"),
     },
     {
       label: "Certificates",

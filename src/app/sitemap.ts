@@ -9,6 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '',
     '/about',
     '/courses',
+    '/blog',
     '/certificate',
     '/contact',
   ].map((route) => ({
@@ -33,5 +34,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...routes, ...courseRoutes]
+  // Dynamic blog post routes
+  const posts = await db.post.findMany({
+    where: { published: true },
+    select: {
+      slug: true,
+      updatedAt: true,
+    },
+  })
+
+  const postRoutes = posts.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: post.updatedAt,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  return [...routes, ...courseRoutes, ...postRoutes]
 }

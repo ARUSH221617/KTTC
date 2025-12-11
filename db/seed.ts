@@ -188,6 +188,54 @@ async function main() {
     console.log("Contacts already exist, skipping.");
   }
 
+  // Create sample categories
+  const categories = await Promise.all([
+    db.category.upsert({ where: { slug: "technology" }, update: {}, create: { name: "Technology", slug: "technology" } }),
+    db.category.upsert({ where: { slug: "education" }, update: {}, create: { name: "Education", slug: "education" } }),
+    db.category.upsert({ where: { slug: "teaching-tips" }, update: {}, create: { name: "Teaching Tips", slug: "teaching-tips" } }),
+  ]);
+
+  // Create sample tags
+  const tags = await Promise.all([
+    db.tag.upsert({ where: { slug: "nextjs" }, update: {}, create: { name: "Next.js", slug: "nextjs" } }),
+    db.tag.upsert({ where: { slug: "seo" }, update: {}, create: { name: "SEO", slug: "seo" } }),
+    db.tag.upsert({ where: { slug: "prisma" }, update: {}, create: { name: "Prisma", slug: "prisma" } }),
+  ]);
+
+  // Create sample posts
+  const post1 = await db.post.upsert({
+    where: { slug: "how-to-use-ai-in-education" },
+    update: {},
+    create: {
+      title: "How to use AI in Education",
+      slug: "how-to-use-ai-in-education",
+      excerpt: "AI is transforming education. Here is how you can use it.",
+      content: "<h2>Introduction</h2><p>Artificial Intelligence is changing the way we teach and learn...</p>",
+      authorId: instructor1.id,
+      published: true,
+      publishedAt: new Date(),
+      categories: { connect: [{ id: categories[1].id }] },
+      tags: { connect: [{ id: tags[0].id }] },
+    },
+  });
+
+  const post2 = await db.post.upsert({
+    where: { slug: "future-of-online-learning" },
+    update: {},
+    create: {
+      title: "The Future of Online Learning",
+      slug: "future-of-online-learning",
+      excerpt: "Online learning is here to stay. What does the future hold?",
+      content: "<h2>The Shift to Digital</h2><p>More and more students are learning online...</p>",
+      authorId: instructor2.id,
+      published: true,
+      publishedAt: new Date(),
+      categories: { connect: [{ id: categories[0].id }, { id: categories[1].id }] },
+    },
+  });
+
+  console.log("Upserted posts");
+
   console.log("Seeding finished.");
 }
 
