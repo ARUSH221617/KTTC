@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { BlogBreadcrumb } from "@/components/blog-breadcrumb";
+import { BlogToolbar } from "@/components/blog/blog-toolbar";
 
 export const metadata = {
   title: "Blog - Knowledge Transfer",
@@ -13,28 +14,41 @@ export const metadata = {
 
 /**
  * Blog Page - Server Component
- * Fetches and displays blog posts with pagination and category filtering.
+ * Fetches and displays blog posts with pagination, search, and category filtering.
  *
  * @param {object} props - The component props.
- * @param {Promise<{ page?: string; category?: string }>} props.searchParams - Search parameters for pagination and filtering.
+ * @param {Promise<{ page?: string; category?: string; search?: string }>} props.searchParams - Search parameters for pagination and filtering.
  */
 export default async function BlogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; category?: string }>;
+  searchParams: Promise<{ page?: string; category?: string; search?: string }>;
 }) {
-  const { page, category } = await searchParams;
+  const { page, category, search } = await searchParams;
 
   const pageNum = Number(page) || 1;
   const limit = 9;
   const skip = (pageNum - 1) * limit;
 
-  const where = {
+  // Build the where clause
+  const where: any = {
     published: true,
-    ...(category ? { categories: { some: { slug: category } } } : {}),
   };
 
-  const [posts, total] = await Promise.all([
+  if (category) {
+    where.categories = { some: { slug: category } };
+  }
+
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { excerpt: { contains: search, mode: 'insensitive' } },
+      { content: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  // Fetch posts, count, and categories in parallel
+  const [posts, total, categories] = await Promise.all([
     db.post.findMany({
       where,
       include: {
@@ -49,6 +63,9 @@ export default async function BlogPage({
       take: limit,
     }),
     db.post.count({ where }),
+    db.category.findMany({
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   const totalPages = Math.ceil(total / limit);
@@ -63,17 +80,8 @@ export default async function BlogPage({
         </p>
       </div>
 
-      {category && (
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Filtering by category:</span>
-          <Badge variant="secondary" className="text-base">
-            {category}
-          </Badge>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/blog">Clear</Link>
-          </Button>
-        </div>
-      )}
+      {/* Filter and Search Bar */}
+      <BlogToolbar categories={categories} />
 
       {posts.length === 0 ? (
         <div className="py-20 text-center text-muted-foreground">
@@ -124,7 +132,7 @@ export default async function BlogPage({
         <div className="flex justify-center gap-2 mt-8">
           {pageNum > 1 && (
             <Button variant="outline" asChild>
-              <Link href={`/blog?page=${pageNum - 1}${category ? `&category=${category}` : ""}`}>
+              <Link href={`/blog?page=${pageNum - 1}${category ? `&category=${category}` : ""}${search ? `&search=${search}` : ""}`}>
                 Previous
               </Link>
             </Button>
@@ -134,7 +142,7 @@ export default async function BlogPage({
           </Button>
           {pageNum < totalPages && (
             <Button variant="outline" asChild>
-              <Link href={`/blog?page=${pageNum + 1}${category ? `&category=${category}` : ""}`}>
+              <Link href={`/blog?page=${pageNum + 1}${category ? `&category=${category}` : ""}${search ? `&search=${search}` : ""}`}>
                 Next
               </Link>
             </Button>
