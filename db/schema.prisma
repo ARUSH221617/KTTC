@@ -3,7 +3,7 @@ datasource db {
 }
 
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 model User {
@@ -19,6 +19,7 @@ model User {
   chats        Chat[]
   documents    Document[]
   suggestions  Suggestion[]
+  posts        Post[]
 }
 
 model Course {
@@ -149,4 +150,39 @@ model Stream {
 model Setting {
   key   String @id
   value String
+}
+
+model Post {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  excerpt         String?
+  content         String
+  featuredImage   String?
+  published       Boolean   @default(false)
+  publishedAt     DateTime?
+  metaTitle       String?
+  metaDescription String?
+  authorId        String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  author     User       @relation(fields: [authorId], references: [id])
+  categories Category[]
+  tags       Tag[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  posts       Post[]
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  posts Post[]
 }
