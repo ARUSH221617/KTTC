@@ -7,14 +7,14 @@ async function main() {
   if (count === 0) {
     console.log("Seeding...");
     let instructor = await db.user.findFirst({
-        where: { email: "alavi@kttc.edu.ir" }
+        where: { email: "alavi@kttcintl.com" }
     });
 
     if (!instructor) {
         instructor = await db.user.create({
         data: {
             name: "Dr. Alavi",
-            email: "alavi@kttc.edu.ir",
+            email: "alavi@kttcintl.com",
             role: "admin",
             password: "hash"
         }

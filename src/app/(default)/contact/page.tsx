@@ -211,8 +211,8 @@ export default function ContactPage() {
                     <Mail className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
                     <div>
                       <p className="font-medium text-gray-900">Email</p>
-                      <p className="text-gray-600 text-sm">info@kttc.edu.ir</p>
-                      <p className="text-gray-600 text-sm">support@kttc.edu.ir</p>
+                      <p className="text-gray-600 text-sm">info@kttcintl.com</p>
+                      <p className="text-gray-600 text-sm">support@kttcintl.com</p>
                     </div>
                   </div>
                   

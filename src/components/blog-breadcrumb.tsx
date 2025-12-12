@@ -25,7 +25,7 @@ export function BlogBreadcrumb({ items }: BreadcrumbProps) {
       "@type": "ListItem",
       position: index + 1,
       name: item.label,
-      item: item.href ? `${process.env.NEXT_PUBLIC_BASE_URL || 'https://kttc.edu.ir'}${item.href}` : undefined,
+      item: item.href ? `${process.env.NEXT_PUBLIC_BASE_URL || 'https://kttcintl.com'}${item.href}` : undefined,
     })),
   };
 

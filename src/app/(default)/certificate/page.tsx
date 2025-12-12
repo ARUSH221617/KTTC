@@ -351,8 +351,8 @@ export default function CertificatePage() {
                       <AlertCircle className="h-16 w-16 text-red-300 mx-auto" />
                       <p className="text-gray-700">
                         If you believe this is an error, please contact our verification department at 
-                        <a href="mailto:verify@kttc.edu.ir" className="text-blue-600 hover:underline ml-1">
-                          verify@kttc.edu.ir
+                        <a href="mailto:verify@kttcintl.com" className="text-blue-600 hover:underline ml-1">
+                          verify@kttcintl.com
                         </a>
                       </p>
                       <Button

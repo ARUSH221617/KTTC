@@ -54,7 +54,7 @@ export default async function CoursesPage() {
         "provider": {
           "@type": "Organization",
           "name": "KTTC",
-          "sameAs": "https://kttc.edu.ir"
+          "sameAs": "https://kttcintl.com"
         },
         "hasCourseInstance": {
           "@type": "CourseInstance",

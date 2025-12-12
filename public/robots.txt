@@ -7,4 +7,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://kttc.edu.ir/sitemap.xml
+Sitemap: https://kttcintl.com/sitemap.xml

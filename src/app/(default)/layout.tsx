@@ -64,7 +64,7 @@ export default function RootLayout({
     "@type": "EducationalOrganization",
     "name": "Khuzestan Teacher Training Center (KTTC)",
     "url": "https://kttcintl.com",
-    "logo": "https://kttc.edu.ir/favicon.ico",
+    "logo": "https://kttcintl.com/favicon.ico",
     "description": "Official online platform for Khuzestan Teacher Training Center.",
     "address": {
       "@type": "PostalAddress",
