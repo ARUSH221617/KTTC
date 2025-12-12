@@ -82,6 +82,12 @@ export function Sidebar({ className, isCollapsed = false, toggleCollapse }: Side
       href: "/admin/media",
       active: pathname.startsWith("/admin/media"),
     },
+    {
+      label: "AI Agent",
+      icon: MessageSquare,
+      href: "/chat",
+      active: pathname.startsWith("/chat"),
+    },
   ];
 
   return (
