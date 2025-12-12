@@ -12,7 +12,7 @@ const Navigation = () => {
 
   const navItems = [
     { href: "/", label: "Home" },
-    { href: "/about", label: "About" },
+    { href: "/about", label: "About Us" },
     { href: "/courses", label: "Courses" },
     { href: "/blog", label: "Blog" },
     { href: "/certificate", label: "Certificate" },
