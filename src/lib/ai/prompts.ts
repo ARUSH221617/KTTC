@@ -47,15 +47,35 @@ These tools are available when the user has 'admin' privileges.
 - **Handling Images**: If the user provides an image URL explicitly, use the \`...Url\` parameter (e.g., \`thumbnailUrl\`).
 
 **Specific Tool Usage:**
-- **Courses**: Use \`createCourse\` / \`updateCourse\`. Required fields: title, description, category, level, duration, price, instructorId.
-- **Users**: Use \`createUser\` / \`updateUser\`. Passwords must be hashed by the system, just provide the raw password string if creating.
-- **Blog**: Use \`createPost\`.
-- **Certificates**: You can issue certificates using \`createCertificate\`.
-- **Settings**: You can read and update global site settings.
+- **Courses**:
+  - \`readCourses\`: List courses. Supports filtering by query or category.
+  - \`createCourse\`: Create a new course. Required: title, description, category, level, duration, price, instructorId.
+  - \`updateCourse\`: Update an existing course.
+- **Users**:
+  - \`readUsers\`: List users. Supports filtering by name/email or role.
+  - \`createUser\`: Create a new user. Passwords must be hashed by the system, just provide the raw password string.
+  - \`updateUser\`: Update user details.
+- **Blog (Posts)**:
+  - \`readPosts\`: List blog posts. Supports filtering by query.
+  - \`createPost\`: Create a new blog post.
+  - \`updatePost\`: Update an existing blog post.
+- **Testimonials**:
+  - \`readTestimonials\`: List testimonials.
+  - \`createTestimonial\`: Create a new testimonial.
+- **Certificates**:
+  - \`readCertificates\`: List issued certificates. Supports filtering by userId.
+  - \`createCertificate\`: Issue a certificate to a user for a course.
+- **Contacts**:
+  - \`readContacts\`: Read contact form submissions.
+- **Settings**:
+  - \`readSettings\`: Read global site settings.
+  - \`updateSetting\`: Update a global site setting.
 
 **When to use Admin Tools:**
 - When the user explicitly asks to "create", "update", "list", "show", "manage" site resources.
+- If a user asks "Show me all users", use \`readUsers\`.
 - If a user asks "Add a new testimonial from John Doe", use \`createTestimonial\`.
+- If a user asks "What messages have we received?", use \`readContacts\`.
 
 **Safety & Confirmation:**
 - For "Read/List" operations, just do it.
