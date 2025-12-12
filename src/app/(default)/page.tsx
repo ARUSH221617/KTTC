@@ -108,6 +108,10 @@ export default function HomePage() {
 
   const testimonialSchema = testimonials.map(testimonial => ({
     "@type": "Review",
+    "itemReviewed": {
+      "@type": "Organization",
+      "name": "Khuzestan Teacher Training Center (KTTC)"
+    },
     "reviewRating": {
       "@type": "Rating",
       "ratingValue": "5"
