@@ -26,6 +26,10 @@ import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
+import * as userTools from "@/lib/ai/tools/admin/users";
+import * as courseTools from "@/lib/ai/tools/admin/courses";
+import * as contentTools from "@/lib/ai/tools/admin/content";
+import * as settingsTools from "@/lib/ai/tools/admin/settings";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
@@ -175,23 +179,37 @@ export async function POST(request: Request) {
         const provider = await getMyProvider();
         const model = provider.languageModel(selectedChatModel);
 
-        // We still want to report the model ID for usage tracking.
-        // But the provider doesn't expose the resolved model ID directly unless we access internal properties
-        // or re-resolve it from settings here, which defeats the purpose of centralized provider.
-        // However, in TokenLens `onFinish`, we need `modelId`.
-
-        // Since `getMyProvider` logic is now centralized, we can fetch settings here just for reporting if needed,
-        // OR trust that `model` works.
-        // But `resolvedModelId` was used for `getUsage` in `onFinish`.
-
-        // Let's rely on the model object having a `modelId` property if possible?
-        // AI SDK `LanguageModel` usually has `modelId`.
         const resolvedModelId = model.modelId;
 
         const modelMessages = convertToModelMessages(uiMessages);
         const system = systemPrompt({ selectedChatModel, requestHints });
         if (system) {
           modelMessages.unshift({ role: "system", content: system });
+        }
+
+        const isAdmin = session.user.role === "admin";
+
+        const activeTools = [
+             "getWeather",
+            "createDocument",
+            "updateDocument",
+            "requestSuggestions",
+        ];
+
+        if (isAdmin) {
+            activeTools.push(
+                // Users
+                "createUser", "updateUser", "readUsers",
+                // Courses
+                "createCourse", "updateCourse", "readCourses",
+                // Content
+                "createPost", "updatePost", "readPosts",
+                "createTestimonial", "readTestimonials",
+                "createCertificate", "readCertificates",
+                "readContacts",
+                // Settings
+                "readSettings", "updateSetting"
+            );
         }
 
         const result = streamText({
@@ -201,12 +219,7 @@ export async function POST(request: Request) {
           experimental_activeTools:
             selectedChatModel === "reasoning"
               ? []
-              : [
-                  "getWeather",
-                  "createDocument",
-                  "updateDocument",
-                  "requestSuggestions",
-                ],
+              : activeTools,
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
             getWeather,
@@ -216,6 +229,27 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            // Admin Tools (only effective if isAdmin is true due to internal checks, but we only expose if activeTools includes them anyway)
+            // Users
+            createUser: userTools.createUser,
+            updateUser: userTools.updateUser,
+            readUsers: userTools.readUsers,
+            // Courses
+            createCourse: courseTools.createCourse,
+            updateCourse: courseTools.updateCourse,
+            readCourses: courseTools.readCourses,
+            // Content
+            createPost: contentTools.createPost,
+            updatePost: contentTools.updatePost,
+            readPosts: contentTools.readPosts,
+            createTestimonial: contentTools.createTestimonial,
+            readTestimonials: contentTools.readTestimonials,
+            createCertificate: contentTools.createCertificate,
+            readCertificates: contentTools.readCertificates,
+            readContacts: contentTools.readContacts,
+            // Settings
+            readSettings: settingsTools.readSettings,
+            updateSetting: settingsTools.updateSetting,
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

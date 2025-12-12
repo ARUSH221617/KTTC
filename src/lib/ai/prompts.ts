@@ -14,7 +14,7 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 - For substantial content (>10 lines) or code
 - For content users will likely save/reuse (emails, code, essays, etc.)
 - When explicitly requested to create a document
-- For when content contains a single code snippet
+- When content contains a single code snippet
 
 **When NOT to use \`createDocument\`:**
 - For informational/explanatory content
@@ -30,6 +30,36 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 - Immediately after creating a document
 
 Do not update document right after creating it. Wait for user feedback or request to update it.
+`;
+
+export const adminToolsPrompt = `
+**ADMIN TOOLS CAPABILITIES:**
+You have access to powerful administrative tools to manage the site content including Users, Courses, Posts, Testimonials, Certificates, Contacts, and Settings.
+These tools are available when the user has 'admin' privileges.
+
+**General Guidelines:**
+- **Always verify intent**: Before modifying critical data (like deleting or major updates), ensure you understand the user's request.
+- **Content Generation**: You can help users create content (like blog posts or course descriptions). If the user provides a topic, you can generate the content and then use the 'create' tool.
+- **Image Generation**: Tools for creating Courses, Posts, and Testimonials support 'Prompt-based Image Generation'.
+  - If a user doesn't provide an image URL but provides a description (or you can infer one), pass a 'prompt' string to the \`...Prompt\` parameter (e.g., \`thumbnailPrompt\`, \`featuredImagePrompt\`).
+  - The system will use the "Nano Banana" model (Gemini Image) to generate an image and attach it.
+  - **Example**: "Create a course about Python." -> You can call \`createCourse\` with \`title="Python Mastery"\` and \`thumbnailPrompt="A snake wrapped around a computer screen coding in Python, digital art"\`.
+- **Handling Images**: If the user provides an image URL explicitly, use the \`...Url\` parameter (e.g., \`thumbnailUrl\`).
+
+**Specific Tool Usage:**
+- **Courses**: Use \`createCourse\` / \`updateCourse\`. Required fields: title, description, category, level, duration, price, instructorId.
+- **Users**: Use \`createUser\` / \`updateUser\`. Passwords must be hashed by the system, just provide the raw password string if creating.
+- **Blog**: Use \`createPost\`.
+- **Certificates**: You can issue certificates using \`createCertificate\`.
+- **Settings**: You can read and update global site settings.
+
+**When to use Admin Tools:**
+- When the user explicitly asks to "create", "update", "list", "show", "manage" site resources.
+- If a user asks "Add a new testimonial from John Doe", use \`createTestimonial\`.
+
+**Safety & Confirmation:**
+- For "Read/List" operations, just do it.
+- For "Create/Update" operations, you may proceed if the request is clear.
 `;
 
 export const regularPrompt =
@@ -59,11 +89,15 @@ export const systemPrompt = ({
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
 
+  // Combine prompts. Admin prompt is added generally, but the tools are only active if the user is admin.
+  // Adding the instructions to the system prompt helps the model know *how* to use them if they are available.
+  const basePrompt = `${regularPrompt}\n\n${requestPrompt}\n\n${adminToolsPrompt}`;
+
   if (selectedChatModel === "reasoning") {
-    return `${regularPrompt}\n\n${requestPrompt}`;
+    return basePrompt;
   }
 
-  return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
+  return `${basePrompt}\n\n${artifactsPrompt}`;
 };
 
 export const codePrompt = `
