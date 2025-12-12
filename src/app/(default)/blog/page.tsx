@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { BlogBreadcrumb } from "@/components/blog-breadcrumb";
 import { BlogToolbar } from "@/components/blog/blog-toolbar";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Blog - Knowledge Transfer",
@@ -71,7 +72,7 @@ export default async function BlogPage({
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="container py-10 space-y-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <BlogBreadcrumb items={[{ label: "Blog" }]} />
       <div className="flex flex-col gap-2">
         <h1 className="text-4xl font-bold tracking-tight">Blog</h1>
@@ -90,7 +91,7 @@ export default async function BlogPage({
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <Card key={post.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
+            <Card key={post.id} className={cn("flex flex-col h-full hover:shadow-md transition-shadow", post.featuredImage ? "pt-0" : "")}>
                {/* Image placeholder if needed, or if featuredImage exists */}
                {post.featuredImage && (
                   <div className="aspect-video w-full overflow-hidden rounded-t-xl bg-muted">

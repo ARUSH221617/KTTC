@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://kttc.edu.ir'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://kttcintl.com'),
   title: "KTTC - Khuzestan Teacher Training Center",
   description:
     "Official online platform for Khuzestan Teacher Training Center. Empowering educators with modern teaching skills and professional development programs.",
@@ -63,8 +63,8 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     "name": "Khuzestan Teacher Training Center (KTTC)",
-    "url": "https://kttc.edu.ir",
-    "logo": "https://kttc.edu.ir/logo.svg",
+    "url": "https://kttcintl.com",
+    "logo": "https://kttc.edu.ir/favicon.ico",
     "description": "Official online platform for Khuzestan Teacher Training Center.",
     "address": {
       "@type": "PostalAddress",

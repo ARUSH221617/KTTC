@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import AdminHeader from "./header";
 
 export default async function AdminLayout({
   children,
@@ -22,7 +21,6 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen relative bg-gray-50">
-      <AdminHeader />
       {children}
     </div>
   );
