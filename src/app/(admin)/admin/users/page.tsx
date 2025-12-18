@@ -23,7 +23,9 @@ export default function UsersPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'user'
+    role: 'user',
+    password: '',
+    confirmPassword: ''
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -52,6 +54,18 @@ export default function UsersPage() {
       errors.email = 'Email is invalid';
     }
 
+    if (!editingUser) {
+      if (!formData.password) {
+        errors.password = 'Password is required';
+      } else if (formData.password.length < 6) {
+        errors.password = 'Password must be at least 6 characters';
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+      }
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -70,8 +84,8 @@ export default function UsersPage() {
         : `/api/admin/users`;
 
       const bodyData = editingUser
-        ? { id: editingUser.id, ...formData }
-        : formData;
+        ? { id: editingUser.id, name: formData.name, email: formData.email, role: formData.role }
+        : { name: formData.name, email: formData.email, role: formData.role, password: formData.password };
 
       const response = await fetch(url, {
         method,
@@ -96,7 +110,7 @@ export default function UsersPage() {
 
   const handleAddUser = () => {
     setEditingUser(null);
-    setFormData({ name: '', email: '', role: 'user' });
+    setFormData({ name: '', email: '', role: 'user', password: '', confirmPassword: '' });
     setFormErrors({});
     setShowAddModal(true);
   };
@@ -106,7 +120,9 @@ export default function UsersPage() {
     setFormData({
       name: user.name || '',
       email: user.email,
-      role: user.role
+      role: user.role,
+      password: '',
+      confirmPassword: ''
     });
     setShowAddModal(true);
   };
@@ -136,7 +152,7 @@ export default function UsersPage() {
     setShowAddModal(open);
     if (!open) {
       setEditingUser(null);
-      setFormData({ name: '', email: '', role: 'user' });
+      setFormData({ name: '', email: '', role: 'user', password: '', confirmPassword: '' });
       setFormErrors({});
     }
   };
@@ -196,6 +212,34 @@ export default function UsersPage() {
                 />
                 {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
               </div>
+
+              {!editingUser && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Password</label>
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      className={`w-full p-2 border rounded ${formErrors.password ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="Enter password"
+                    />
+                    {formErrors.password && <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                      className={`w-full p-2 border rounded ${formErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="Confirm password"
+                    />
+                    {formErrors.confirmPassword && <p className="text-red-500 text-sm mt-1">{formErrors.confirmPassword}</p>}
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-sm font-medium mb-1">Role</label>
