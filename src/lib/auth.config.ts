@@ -22,6 +22,7 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isAdmin = auth?.user?.role === "admin" || auth?.user?.role === "ADMIN";
       const isOnAdmin = nextUrl.pathname.startsWith("/admin");
+      const isOnChat = nextUrl.pathname.startsWith("/chat");
       const isOnLogin = nextUrl.pathname === "/login";
       const isOnAdminApi = nextUrl.pathname.startsWith("/api/admin");
 
@@ -35,6 +36,17 @@ export const authConfig = {
 
       // Admin Pages protection
       if (isOnAdmin) {
+        if (!isLoggedIn) {
+          return false; // Redirects to login
+        }
+        if (!isAdmin) {
+          return Response.redirect(new URL("/", nextUrl));
+        }
+        return true;
+      }
+
+      // Chat Page protection
+      if (isOnChat) {
         if (!isLoggedIn) {
           return false; // Redirects to login
         }
